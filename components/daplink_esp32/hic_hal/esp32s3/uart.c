@@ -2,7 +2,7 @@
  * @Author: 星年 && jixingnian@gmail.com
  * @Date: 2025-12-04 12:20:16
  * @LastEditors: xingnian jixingnian@gmail.com
- * @LastEditTime: 2025-12-04 12:20:21
+ * @LastEditTime: 2025-12-04 12:23:30
  * @FilePath: \DAPLinkf:\code\xn_esp32_compoents\xn_esp32_daplink_module\components\daplink_esp32\hic_hal\esp32s3\uart.c
  * @Description: ESP32-S3 UART 硬件抽象层实现
  * 
@@ -20,7 +20,7 @@ static const char *TAG = "UART_HAL";
 /**
  * @brief UART 初始化
  */
-int uart_hal_init(uint8_t uart_num, uint32_t baud_rate)
+int daplink_uart_init(uint8_t uart_num, uint32_t baud_rate)
 {
     ESP_LOGI(TAG, "Initializing UART%d at %lu baud", uart_num, baud_rate);
     
@@ -64,7 +64,7 @@ int uart_hal_init(uint8_t uart_num, uint32_t baud_rate)
 /**
  * @brief UART 发送数据
  */
-int uart_hal_write(uint8_t uart_num, const uint8_t *data, uint32_t len)
+int daplink_uart_write(uint8_t uart_num, const uint8_t *data, uint32_t len)
 {
     int written = uart_write_bytes(uart_num, (const char *)data, len);
     return written;
@@ -73,7 +73,7 @@ int uart_hal_write(uint8_t uart_num, const uint8_t *data, uint32_t len)
 /**
  * @brief UART 接收数据
  */
-int uart_hal_read(uint8_t uart_num, uint8_t *data, uint32_t len, uint32_t timeout_ms)
+int daplink_uart_read(uint8_t uart_num, uint8_t *data, uint32_t len, uint32_t timeout_ms)
 {
     int read = uart_read_bytes(uart_num, data, len, pdMS_TO_TICKS(timeout_ms));
     return read;

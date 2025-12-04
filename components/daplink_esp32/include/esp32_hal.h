@@ -62,7 +62,7 @@ bool gpio_hal_get_reset(void);
  * @param baud_rate 波特率
  * @return 0: 成功, -1: 失败
  */
-int uart_hal_init(uint8_t uart_num, uint32_t baud_rate);
+int daplink_uart_init(uint8_t uart_num, uint32_t baud_rate);
 
 /**
  * @brief UART 发送数据
@@ -71,7 +71,7 @@ int uart_hal_init(uint8_t uart_num, uint32_t baud_rate);
  * @param len 数据长度
  * @return 实际发送的字节数
  */
-int uart_hal_write(uint8_t uart_num, const uint8_t *data, uint32_t len);
+int daplink_uart_write(uint8_t uart_num, const uint8_t *data, uint32_t len);
 
 /**
  * @brief UART 接收数据
@@ -81,7 +81,7 @@ int uart_hal_write(uint8_t uart_num, const uint8_t *data, uint32_t len);
  * @param timeout_ms 超时时间(毫秒)
  * @return 实际接收的字节数
  */
-int uart_hal_read(uint8_t uart_num, uint8_t *data, uint32_t len, uint32_t timeout_ms);
+int daplink_uart_read(uint8_t uart_num, uint8_t *data, uint32_t len, uint32_t timeout_ms);
 
 /* ==================== USB 缓冲区接口 ==================== */
 
