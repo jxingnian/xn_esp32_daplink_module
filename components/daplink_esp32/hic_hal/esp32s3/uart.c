@@ -1,11 +1,14 @@
-/**
- * @file    uart.c
- * @brief   ESP32-S3 UART 硬件抽象层实现
+/*
+ * @Author: 星年 && jixingnian@gmail.com
+ * @Date: 2025-12-04 12:20:16
+ * @LastEditors: xingnian jixingnian@gmail.com
+ * @LastEditTime: 2025-12-04 12:20:21
+ * @FilePath: \DAPLinkf:\code\xn_esp32_compoents\xn_esp32_daplink_module\components\daplink_esp32\hic_hal\esp32s3\uart.c
+ * @Description: ESP32-S3 UART 硬件抽象层实现
  * 
- * @author  星年
- * @date    2025-12-04
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
-
+ 
 #include "esp32_hal.h"
 #include "driver/uart.h"
 #include "esp_log.h"

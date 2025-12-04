@@ -1,9 +1,12 @@
-/**
- * @file    esp32_port.c
- * @brief   ESP32-S3 系统接口实现
+/*
+ * @Author: 星年 && jixingnian@gmail.com
+ * @Date: 2025-12-04 10:41:55
+ * @LastEditors: xingnian jixingnian@gmail.com
+ * @LastEditTime: 2025-12-04 12:18:21
+ * @FilePath: \DAPLinkf:\code\xn_esp32_compoents\xn_esp32_daplink_module\components\daplink_esp32\port\esp32_port.c
+ * @Description: ESP32-S3 系统接口实现
  * 
- * @author  星年
- * @date    2025-12-04
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
 
 #include "esp32_hal.h"

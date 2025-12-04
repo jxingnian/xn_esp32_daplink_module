@@ -1,9 +1,12 @@
-/**
- * @file    DAP_config.h
- * @brief   CMSIS-DAP 配置文件 (ESP32-S3)
+/*
+ * @Author: 星年 && jixingnian@gmail.com
+ * @Date: 2025-12-04 10:40:54
+ * @LastEditors: xingnian jixingnian@gmail.com
+ * @LastEditTime: 2025-12-04 12:21:15
+ * @FilePath: \DAPLinkf:\code\xn_esp32_compoents\xn_esp32_daplink_module\components\daplink_esp32\hic_hal\esp32s3\DAP_config.h
+ * @Description: CMSIS-DAP 配置文件 (ESP32-S3)
  * 
- * @author  星年
- * @date    2025-12-04
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
 
 #ifndef DAP_CONFIG_H

@@ -1,9 +1,12 @@
-/**
- * @file    esp32_hal.h
- * @brief   ESP32-S3 硬件抽象层接口定义
+/*
+ * @Author: 星年 && jixingnian@gmail.com
+ * @Date: 2025-12-04 12:16:23
+ * @LastEditors: xingnian jixingnian@gmail.com
+ * @LastEditTime: 2025-12-04 12:18:45
+ * @FilePath: \DAPLinkf:\code\xn_esp32_compoents\xn_esp32_daplink_module\components\daplink_esp32\include\esp32_hal.h
+ * @Description: ESP32-S3 硬件抽象层接口定义
  * 
- * @author  星年
- * @date    2025-12-04
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
 
 #ifndef ESP32_HAL_H
