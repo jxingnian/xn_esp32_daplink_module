@@ -1,0 +1,14 @@
+idf_component_register(
+    SRCS 
+        "hic_hal/esp32s3/gpio.c"
+        "hic_hal/esp32s3/uart.c"
+        "hic_hal/esp32s3/usb_buf.c"
+        "port/esp32_port.c"
+    INCLUDE_DIRS 
+        "include"
+        "hic_hal/esp32s3"
+    REQUIRES
+        driver
+        esp_timer
+        freertos
+)
