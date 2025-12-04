@@ -1,3 +1,3 @@
 idf_component_register(SRCS "main.c"
-                       PRIV_REQUIRES xn_web_wifi_manger
+                       PRIV_REQUIRES daplink_esp32
                        INCLUDE_DIRS "")

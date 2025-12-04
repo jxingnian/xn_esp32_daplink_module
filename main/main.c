@@ -2,8 +2,8 @@
  * @Author: 星年 jixingnian@gmail.com
  * @Date: 2025-12-04
  * @LastEditors: xingnian jixingnian@gmail.com
- * @LastEditTime: 2025-12-04
- * @FilePath: \xn_esp32_daplink_module\main\main.c
+ * @LastEditTime: 2025-12-04 10:50:05
+ * @FilePath: \DAPLinkf:\code\xn_esp32_compoents\xn_esp32_daplink_module\main\main.c
  * @Description: ESP32-S3 DAPLink 主程序
  */
 

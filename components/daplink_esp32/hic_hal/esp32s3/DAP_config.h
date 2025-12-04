@@ -63,84 +63,126 @@ extern "C" {
 
 /* ==================== GPIO 宏定义 ==================== */
 
-// GPIO 寄存器直接访问
-#define GPIO_OUT_SET_REG        GPIO.out_w1ts
-#define GPIO_OUT_CLR_REG        GPIO.out_w1tc
-#define GPIO_IN_REG             GPIO.in
+// 注意：ESP32-S3 使用不同的寄存器地址，需要包含 soc/gpio_reg.h
+#include "soc/gpio_reg.h"
+#include "soc/gpio_struct.h"
+#include "soc/soc.h"
 
 /* ==================== SWD 引脚操作宏 ==================== */
 
-/// SWCLK 引脚设置为高电平
-#define PIN_SWCLK_SET()         GPIO_OUT_SET_REG = (1ULL << PIN_SWCLK)
+/// SWCLK 引脚设置为高电平（直接寄存器操作，2-3 CPU周期）
+static inline void PIN_SWCLK_SET_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TS_REG, (1UL << PIN_SWCLK));
+}
+#define PIN_SWCLK_SET()         PIN_SWCLK_SET_INLINE()
 
 /// SWCLK 引脚设置为低电平
-#define PIN_SWCLK_CLR()         GPIO_OUT_CLR_REG = (1ULL << PIN_SWCLK)
+static inline void PIN_SWCLK_CLR_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TC_REG, (1UL << PIN_SWCLK));
+}
+#define PIN_SWCLK_CLR()         PIN_SWCLK_CLR_INLINE()
 
-/// SWDIO 引脚设置为输出模式
-#define PIN_SWDIO_OUT_ENABLE()  do { \
-    gpio_set_direction(PIN_SWDIO, GPIO_MODE_OUTPUT); \
-} while(0)
+/// SWDIO 引脚设置为输出模式（初始化时调用，不需要高速）
+#define PIN_SWDIO_OUT_ENABLE()  gpio_set_direction(PIN_SWDIO, GPIO_MODE_OUTPUT)
 
 /// SWDIO 引脚设置为输入模式
-#define PIN_SWDIO_OUT_DISABLE() do { \
-    gpio_set_direction(PIN_SWDIO, GPIO_MODE_INPUT); \
-} while(0)
+#define PIN_SWDIO_OUT_DISABLE() gpio_set_direction(PIN_SWDIO, GPIO_MODE_INPUT)
 
-/// SWDIO 引脚设置为高电平
-#define PIN_SWDIO_SET()         GPIO_OUT_SET_REG = (1ULL << PIN_SWDIO)
+/// SWDIO 引脚设置为高电平（直接寄存器操作）
+static inline void PIN_SWDIO_SET_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TS_REG, (1UL << PIN_SWDIO));
+}
+#define PIN_SWDIO_SET()         PIN_SWDIO_SET_INLINE()
 
 /// SWDIO 引脚设置为低电平
-#define PIN_SWDIO_CLR()         GPIO_OUT_CLR_REG = (1ULL << PIN_SWDIO)
+static inline void PIN_SWDIO_CLR_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TC_REG, (1UL << PIN_SWDIO));
+}
+#define PIN_SWDIO_CLR()         PIN_SWDIO_CLR_INLINE()
 
-/// 读取 SWDIO 引脚电平
-#define PIN_SWDIO_IN()          ((GPIO_IN_REG >> PIN_SWDIO) & 1)
+/// 读取 SWDIO 引脚电平（直接寄存器读取）
+static inline uint32_t PIN_SWDIO_IN_INLINE(void) {
+    return (REG_READ(GPIO_IN_REG) >> PIN_SWDIO) & 1UL;
+}
+#define PIN_SWDIO_IN()          PIN_SWDIO_IN_INLINE()
 
 /* ==================== JTAG 引脚操作宏 ==================== */
 
 #if DAP_JTAG
 
 /// TCK 引脚设置为高电平
-#define PIN_TCK_SET()           GPIO_OUT_SET_REG = (1ULL << PIN_TCK)
+static inline void PIN_TCK_SET_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TS_REG, (1UL << PIN_TCK));
+}
+#define PIN_TCK_SET()           PIN_TCK_SET_INLINE()
 
 /// TCK 引脚设置为低电平
-#define PIN_TCK_CLR()           GPIO_OUT_CLR_REG = (1ULL << PIN_TCK)
+static inline void PIN_TCK_CLR_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TC_REG, (1UL << PIN_TCK));
+}
+#define PIN_TCK_CLR()           PIN_TCK_CLR_INLINE()
 
 /// TMS 引脚设置为高电平
-#define PIN_TMS_SET()           GPIO_OUT_SET_REG = (1ULL << PIN_TMS)
+static inline void PIN_TMS_SET_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TS_REG, (1UL << PIN_TMS));
+}
+#define PIN_TMS_SET()           PIN_TMS_SET_INLINE()
 
 /// TMS 引脚设置为低电平
-#define PIN_TMS_CLR()           GPIO_OUT_CLR_REG = (1ULL << PIN_TMS)
+static inline void PIN_TMS_CLR_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TC_REG, (1UL << PIN_TMS));
+}
+#define PIN_TMS_CLR()           PIN_TMS_CLR_INLINE()
 
 /// TDI 引脚设置为高电平
-#define PIN_TDI_SET()           GPIO_OUT_SET_REG = (1ULL << PIN_TDI)
+static inline void PIN_TDI_SET_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TS_REG, (1UL << PIN_TDI));
+}
+#define PIN_TDI_SET()           PIN_TDI_SET_INLINE()
 
 /// TDI 引脚设置为低电平
-#define PIN_TDI_CLR()           GPIO_OUT_CLR_REG = (1ULL << PIN_TDI)
+static inline void PIN_TDI_CLR_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TC_REG, (1UL << PIN_TDI));
+}
+#define PIN_TDI_CLR()           PIN_TDI_CLR_INLINE()
 
 /// 读取 TDO 引脚电平
-#define PIN_TDO_IN()            ((GPIO_IN_REG >> PIN_TDO) & 1)
+static inline uint32_t PIN_TDO_IN_INLINE(void) {
+    return (REG_READ(GPIO_IN_REG) >> PIN_TDO) & 1UL;
+}
+#define PIN_TDO_IN()            PIN_TDO_IN_INLINE()
 
 #endif
 
 /* ==================== 复位引脚操作宏 ==================== */
 
 /// nRESET 引脚设置为高电平（释放复位）
-#define PIN_nRESET_SET()        GPIO_OUT_SET_REG = (1ULL << PIN_nRESET)
+static inline void PIN_nRESET_SET_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TS_REG, (1UL << PIN_nRESET));
+}
+#define PIN_nRESET_SET()        PIN_nRESET_SET_INLINE()
 
 /// nRESET 引脚设置为低电平（进入复位）
-#define PIN_nRESET_CLR()        GPIO_OUT_CLR_REG = (1ULL << PIN_nRESET)
+static inline void PIN_nRESET_CLR_INLINE(void) {
+    REG_WRITE(GPIO_OUT_W1TC_REG, (1UL << PIN_nRESET));
+}
+#define PIN_nRESET_CLR()        PIN_nRESET_CLR_INLINE()
 
 /// 读取 nRESET 引脚电平
-#define PIN_nRESET_IN()         ((GPIO_IN_REG >> PIN_nRESET) & 1)
+static inline uint32_t PIN_nRESET_IN_INLINE(void) {
+    return (REG_READ(GPIO_IN_REG) >> PIN_nRESET) & 1UL;
+}
+#define PIN_nRESET_IN()         PIN_nRESET_IN_INLINE()
 
 /* ==================== LED 操作宏 ==================== */
 
+// LED 不需要高速操作，使用 HAL 函数即可
 #if LED_CONNECTED_POLARITY == LED_ACTIVE_HIGH
-    #define LED_CONNECTED_ON()  GPIO_OUT_SET_REG = (1ULL << PIN_LED_CONNECTED)
-    #define LED_CONNECTED_OFF() GPIO_OUT_CLR_REG = (1ULL << PIN_LED_CONNECTED)
+    #define LED_CONNECTED_ON()  gpio_set_level(PIN_LED_CONNECTED, 1)
+    #define LED_CONNECTED_OFF() gpio_set_level(PIN_LED_CONNECTED, 0)
 #else
-    #define LED_CONNECTED_ON()  GPIO_OUT_CLR_REG = (1ULL << PIN_LED_CONNECTED)
-    #define LED_CONNECTED_OFF() GPIO_OUT_SET_REG = (1ULL << PIN_LED_CONNECTED)
+    #define LED_CONNECTED_ON()  gpio_set_level(PIN_LED_CONNECTED, 0)
+    #define LED_CONNECTED_OFF() gpio_set_level(PIN_LED_CONNECTED, 1)
 #endif
 
 /* ==================== 时序延时宏 ==================== */
