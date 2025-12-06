@@ -230,7 +230,7 @@ static const flash_algo_t *supported_algos[] = {
 **目标**：建立项目基础架构
 
 **任务清单**：
-- [ ] 创建 ESP32 HAL 层目录结构
+- [x] 创建 ESP32 HAL 层目录结构
   ```
   components/daplink_esp32/
   ├── CMakeLists.txt
@@ -247,9 +247,9 @@ static const flash_algo_t *supported_algos[] = {
   └── port/
       └── esp32_port.c
   ```
-- [ ] 配置 GPIO 引脚映射
-- [ ] 实现基础 GPIO 初始化函数
-- [ ] 编写 HAL 层接口定义
+- [x] 配置 GPIO 引脚映射
+- [x] 实现基础 GPIO 初始化函数
+- [x] 编写 HAL 层接口定义
 
 **验收标准**：
 - ✅ 项目可以编译通过
@@ -258,44 +258,37 @@ static const flash_algo_t *supported_algos[] = {
 
 ---
 
-### 阶段 2：USB HID 接口实现 (第 3-4 周)
+### 阶段 2：USB 复合设备框架 (第 3-4 周)
 
-**目标**：实现 CMSIS-DAP HID 通信
+**目标**：搭建支持多接口的 USB 复合设备框架
 
 **任务清单**：
-- [ ] 配置 TinyUSB HID 设备
-- [ ] 实现 CMSIS-DAP HID 报告描述符
-- [ ] 实现 USB HID 数据收发
-- [ ] 测试 USB 枚举和通信
-
-**关键代码**：
-```c
-// HID 报告描述符
-static const uint8_t dap_hid_report_desc[] = {
-    HID_USAGE_PAGE(HID_USAGE_PAGE_VENDOR),
-    HID_USAGE(0x01),
-    HID_COLLECTION(HID_COLLECTION_APPLICATION),
-    HID_USAGE(0x20),
-    HID_LOGICAL_MIN(0x00),
-    HID_LOGICAL_MAX_N(0xff, 2),
-    HID_REPORT_SIZE(8),
-    HID_REPORT_COUNT(64),
-    HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),
-    HID_USAGE(0x21),
-    HID_REPORT_COUNT(64),
-    HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),
-    HID_END_COLLECTION
-};
-```
+- [ ] 配置 TinyUSB 复合设备
+  - [ ] HID 接口（CMSIS-DAP v1）
+  - [ ] Vendor 接口（CMSIS-DAP v2 Bulk）
+  - [ ] CDC 接口（虚拟串口，预留）
+- [ ] 实现 USB 描述符
+  ```c
+  // 复合设备配置
+  #define USBD_VID           0x0D28  // ARM Ltd
+  #define USBD_PID           0x0204  // DAPLink
+  
+  // 接口分配
+  #define ITF_NUM_HID        0       // CMSIS-DAP v1
+  #define ITF_NUM_VENDOR     1       // CMSIS-DAP v2
+  #define ITF_NUM_CDC        2       // 虚拟串口
+  ```
+- [ ] 实现 WinUSB 描述符（v2 免驱动支持）
+- [ ] 测试 USB 枚举
 
 **验收标准**：
-- ✅ PC 可以识别 CMSIS-DAP 设备
-- ✅ 可以发送和接收 HID 报告
-- ✅ pyOCD 可以检测到设备
+- ✅ PC 可以识别复合设备
+- ✅ 显示多个接口
+- ✅ Windows 10+ 免驱动识别
 
 ---
 
-### 阶段 3：CMSIS-DAP 核心集成 (第 5-6 周)
+### 阶段 3：CMSIS-DAP 核心移植 (第 5-6 周)
 
 **目标**：集成 CMSIS-DAP 协议处理
 
@@ -338,9 +331,9 @@ void dap_task(void *pvParameters) {
 
 ---
 
-### 阶段 4：SWD 协议实现 (第 7-9 周)
+### 阶段 4：SWD 协议实现与优化 (第 7-9 周)
 
-**目标**：实现 SWD 调试接口
+**目标**：实现高性能 SWD 调试接口
 
 **任务清单**：
 - [ ] 实现 SWD 位操作函数
@@ -394,9 +387,9 @@ IRAM_ATTR uint8_t swd_transfer(uint32_t request, uint32_t *data) {
 
 ---
 
-### 阶段 5：JTAG 协议实现 (第 10-11 周)
+### 阶段 5：JTAG 协议与性能优化 (第 10-11 周)
 
-**目标**：实现 JTAG 调试接口
+**目标**：实现 JTAG 调试接口并优化传输性能
 
 **任务清单**：
 - [ ] 实现 JTAG 状态机
@@ -430,9 +423,9 @@ IRAM_ATTR void jtag_shift_data(const uint8_t *tdi, uint8_t *tdo, uint32_t bits);
 
 ---
 
-### 阶段 6：虚拟串口 (CDC) (第 12 周)
+### 阶段 6：虚拟串口与 SWO (第 12-13 周)
 
-**目标**：实现 USB 虚拟串口
+**目标**：实现 USB 虚拟串口和 SWO 跟踪输出
 
 **任务清单**：
 - [ ] 配置 TinyUSB CDC 接口
@@ -470,9 +463,9 @@ void cdc_task(void *pvParameters) {
 
 ---
 
-### 阶段 7：拖放烧录 (MSC) (第 13-15 周)
+### 阶段 7：拖放烧录 (MSC) (第 14-16 周)
 
-**目标**：实现虚拟 U 盘烧录功能
+**目标**：实现虚拟 U 盘拖放烧录功能
 
 **任务清单**：
 - [ ] 配置 TinyUSB MSC 接口
@@ -511,22 +504,42 @@ int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset,
 
 ---
 
-### 阶段 8：SWO 跟踪输出 (第 16 周)
+### 阶段 8：协议切换与兼容性 (第 17 周)
 
-**目标**：实现 SWO 串行输出
+**目标**：实现 v1/v2 自动切换和多工具兼容
 
 **任务清单**：
-- [ ] 配置 UART 接收 SWO
-- [ ] 实现 SWO 解码
-- [ ] 通过 CDC 转发 SWO 数据
+- [ ] 实现协议自动检测
+  ```c
+  // 主机优先使用 v2，不支持则回退到 v1
+  if (host_supports_bulk) {
+      use_dap_v2();  // 高速模式
+  } else {
+      use_dap_v1();  // 兼容模式
+  }
+  ```
+- [ ] 测试多种调试工具
+  - [ ] OpenOCD
+  - [ ] pyOCD
+  - [ ] Keil MDK
+  - [ ] IAR EWARM
+  - [ ] GDB
+- [ ] 实现配置切换
+  ```c
+  // 运行时配置
+  #define DAP_DEFAULT_PROTOCOL  DAP_PROTOCOL_AUTO
+  // 可选: DAP_PROTOCOL_V1_ONLY
+  // 可选: DAP_PROTOCOL_V2_ONLY
+  ```
 
 **验收标准**：
-- ✅ 可以接收 SWO 数据
-- ✅ 可以在 PC 端查看跟踪输出
+- ✅ 所有工具都能识别设备
+- ✅ v2 速度达到 1 MB/s
+- ✅ v1 兼容性 100%
 
 ---
 
-### 阶段 9：测试与优化 (第 17-20 周)
+### 阶段 9：测试与优化 (第 18-20 周)
 
 **目标**：全面测试和性能优化
 
@@ -565,14 +578,14 @@ int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset,
 
 | 里程碑 | 时间 | 目标 | 状态 |
 |--------|------|------|------|
-| **M1: 基础框架** | 第 2 周 | HAL 层搭建完成 | 🔲 待开始 |
-| **M2: USB 通信** | 第 4 周 | HID 设备可用 | 🔲 待开始 |
-| **M3: DAP 协议** | 第 6 周 | DAP 命令处理 | 🔲 待开始 |
+| **M1: 基础框架** | 第 2 周 | HAL 层搭建完成 | ✅ 已完成 |
+| **M2: USB 复合设备** | 第 4 周 | 多接口设备可用 | 🔲 进行中 |
+| **M3: DAP 协议** | 第 6 周 | v1+v2 命令处理 | 🔲 待开始 |
 | **M4: SWD 调试** | 第 9 周 | 可以调试 ARM 芯片 | 🔲 待开始 |
 | **M5: JTAG 调试** | 第 11 周 | JTAG 接口可用 | 🔲 待开始 |
-| **M6: 虚拟串口** | 第 12 周 | CDC 串口可用 | 🔲 待开始 |
-| **M7: 拖放烧录** | 第 15 周 | MSC 烧录可用 | 🔲 待开始 |
-| **M8: 完整功能** | 第 16 周 | 所有功能就绪 | 🔲 待开始 |
+| **M6: 串口与跟踪** | 第 13 周 | CDC + SWO 可用 | 🔲 待开始 |
+| **M7: 拖放烧录** | 第 16 周 | MSC 烧录可用 | 🔲 待开始 |
+| **M8: 协议兼容** | 第 17 周 | 多工具兼容 | 🔲 待开始 |
 | **M9: 发布版本** | 第 20 周 | 测试完成，发布 v1.0 | 🔲 待开始 |
 
 ---
@@ -694,19 +707,30 @@ idf.py flash monitor
 
 ## 更新日志
 
-### v0.1.0 (计划中)
-- 🔲 基础框架搭建
-- 🔲 USB HID 接口
-- 🔲 CMSIS-DAP 协议
+### v0.1.0 (已完成)
+- ✅ 基础框架搭建
+- ✅ HAL 层实现
+- ✅ GPIO 和系统接口
 
-### v0.2.0 (计划中)
+### v0.2.0 (开发中)
+- 🔲 USB 复合设备框架
+- 🔲 CMSIS-DAP v1 (HID)
+- 🔲 CMSIS-DAP v2 (Bulk)
+
+### v0.3.0 (计划中)
 - 🔲 SWD 调试功能
 - 🔲 JTAG 调试功能
 
+### v0.5.0 (计划中)
+- 🔲 虚拟串口 CDC
+- 🔲 SWO 跟踪输出
+- 🔲 拖放烧录 MSC
+
 ### v1.0.0 (计划中)
 - 🔲 完整功能实现
-- 🔲 稳定性测试
+- 🔲 多工具兼容性
 - 🔲 性能优化
+- 🔲 稳定性测试
 
 ---
 

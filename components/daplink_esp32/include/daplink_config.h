@@ -22,11 +22,19 @@ extern "C" {
 #define DAPLINK_VERSION_PATCH       0
 
 /* ==================== 功能开关 ==================== */
+// CMSIS-DAP 协议版本
+#define ENABLE_CMSIS_DAP_V1         1       // 启用 CMSIS-DAP v1 (HID)
+#define ENABLE_CMSIS_DAP_V2         1       // 启用 CMSIS-DAP v2 (Bulk)
+
+// 调试接口
 #define ENABLE_SWD                  1       // 启用 SWD 调试
-#define ENABLE_JTAG                 0       // 启用 JTAG 调试（暂未实现）
-#define ENABLE_CDC                  0       // 启用虚拟串口（暂未实现）
-#define ENABLE_MSC                  0       // 启用拖放烧录（暂未实现）
-#define ENABLE_SWO                  0       // 启用 SWO 跟踪（暂未实现）
+#define ENABLE_JTAG                 0       // 启用 JTAG 调试（阶段5）
+
+// 附加功能
+#define ENABLE_CDC                  0       // 启用虚拟串口（阶段6）
+#define ENABLE_MSC                  0       // 启用拖放烧录（阶段7）
+#define ENABLE_SWO                  0       // 启用 SWO 跟踪（阶段6）
+#define ENABLE_WEBUSB               0       // 启用 WebUSB（可选）
 
 /* ==================== GPIO 引脚配置 ==================== */
 // SWD 接口引脚
@@ -59,8 +67,27 @@ extern "C" {
 #define JTAG_CLOCK_FREQ_HZ          1000000         // JTAG 时钟频率 1MHz
 
 /* ==================== 缓冲区大小 ==================== */
-#define DAP_PACKET_SIZE             64              // DAP 数据包大小
+// CMSIS-DAP v1 (HID)
+#define DAP_PACKET_SIZE             64              // DAP v1 数据包大小
 #define DAP_PACKET_COUNT            4               // DAP 数据包数量
+
+// CMSIS-DAP v2 (Bulk)
+#define DAP_PACKET_SIZE_V2          512             // DAP v2 数据包大小
+#define DAP_PACKET_COUNT_V2         4               // DAP v2 数据包数量
+
+/* ==================== 协议配置 ==================== */
+// 协议选择模式
+#define DAP_PROTOCOL_AUTO           0               // 自动选择（优先v2）
+#define DAP_PROTOCOL_V1_ONLY        1               // 仅使用 v1
+#define DAP_PROTOCOL_V2_ONLY        2               // 仅使用 v2
+
+#define DAP_DEFAULT_PROTOCOL        DAP_PROTOCOL_AUTO
+
+/* ==================== USB 配置 ==================== */
+#define USBD_VID                    0x0D28          // ARM Ltd
+#define USBD_PID                    0x0204          // DAPLink
+#define USBD_MANUFACTURER           "XingNian"      // 制造商
+#define USBD_PRODUCT                "ESP32-S3 DAPLink"  // 产品名
 
 /* ==================== 调试配置 ==================== */
 #define DAPLINK_DEBUG               1               // 启用调试输出
