@@ -2,8 +2,8 @@
  * @Author: 星年 && jixingnian@gmail.com
  * @Date: 2025-12-04 10:40:22
  * @LastEditors: xingnian jixingnian@gmail.com
- * @LastEditTime: 2025-12-04 12:19:14
- * @FilePath: \DAPLinkf:\code\xn_esp32_compoents\xn_esp32_daplink_module\components\daplink_esp32\include\daplink_config.h
+ * @LastEditTime: 2025-12-06 13:53:48
+ * @FilePath: \todo-xn_esp32_daplink_module\components\daplink_esp32\include\daplink_config.h
  * @Description: DAPLink ESP32-S3 配置文件
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 

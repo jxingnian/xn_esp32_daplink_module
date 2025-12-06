@@ -14,6 +14,7 @@
 #include "esp_log.h"
 #include "esp32_hal.h"
 #include "daplink_config.h"
+#include "usb_init.h"
 
 static const char *TAG = "MAIN";
 
@@ -61,6 +62,13 @@ void app_main(void)
     }
     
     ESP_LOGI(TAG, "Hardware initialized successfully");
+    
+    // 初始化 USB
+    ESP_LOGI(TAG, "Initializing USB...");
+    if (usb_init() != 0) {
+        ESP_LOGE(TAG, "Failed to initialize USB");
+        return;
+    }
     
     // 启动测试 LED 闪烁
     ESP_LOGI(TAG, "Starting LED test...");
