@@ -7,7 +7,6 @@
 
 #include "esp_log.h"
 #include "tinyusb.h"
-#include "tinyusb_default_config.h"
 
 static const char *TAG = "USB";
 
@@ -17,8 +16,30 @@ static const char *TAG = "USB";
 int usb_init(void) {
     ESP_LOGI(TAG, "Initializing USB with default config...");
     
-    // 使用默认配置
-    const tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
+    // 手动配置 - ESP32-S3 使用全速模式
+    const tinyusb_config_t tusb_cfg = {
+        .port = TINYUSB_PORT_FULL_SPEED_0,
+        .phy = {
+            .skip_setup = false,
+            .self_powered = false,
+            .vbus_monitor_io = -1,
+        },
+        .task = {
+            .size = 4096,
+            .priority = 5,
+            .xCoreID = 0,
+        },
+        .descriptor = {
+            .device = NULL,              // 使用默认设备描述符
+            .qualifier = NULL,
+            .string = NULL,
+            .string_count = 0,
+            .full_speed_config = NULL,   // 使用默认配置描述符
+            .high_speed_config = NULL,
+        },
+        .event_cb = NULL,
+        .event_arg = NULL,
+    };
     
     // 安装驱动
     esp_err_t ret = tinyusb_driver_install(&tusb_cfg);
