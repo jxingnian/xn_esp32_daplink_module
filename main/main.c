@@ -15,6 +15,7 @@
 #include "esp32_hal.h"
 #include "daplink_config.h"
 #include "usb_init.h"
+#include "dap_handler.h"
 
 static const char *TAG = "MAIN";
 
@@ -77,11 +78,15 @@ void app_main(void)
     gpio_hal_set_led(0, false);
     vTaskDelay(pdMS_TO_TICKS(500));
     
+    // 初始化 DAP 处理器
+    ESP_LOGI(TAG, "Initializing DAP handler...");
+    dap_handler_init();
+    
     // 创建 LED 测试任务
     xTaskCreate(led_test_task, "led_test", 2048, NULL, 5, NULL);
     
     ESP_LOGI(TAG, "System ready!");
-    ESP_LOGI(TAG, "Phase 1 (Basic Framework) completed!");
+    ESP_LOGI(TAG, "CMSIS-DAP v2 ready for Keil/OpenOCD!");
     
     // 打印配置信息
     ESP_LOGI(TAG, "Configuration:");

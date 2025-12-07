@@ -6,6 +6,7 @@ idf_component_register(
         "port/esp32_port.c"
         "usb/usb_init.c"
         "usb/usb_descriptors.c"
+        "dap/dap_handler.c"
     INCLUDE_DIRS 
         "include"
         "hic_hal/esp32s3"

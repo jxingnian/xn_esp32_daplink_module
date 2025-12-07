@@ -1,0 +1,34 @@
+; ESP32-S3 CMSIS-DAP v2 Driver Installation
+; Copyright (c) 2025 XingNian
+
+[Version]
+Signature="$Windows NT$"
+Class=USBDevice
+ClassGuid={88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+Provider=%ManufacturerName%
+CatalogFile=esp32s3_daplink.cat
+DriverVer=12/07/2025,2.0.0.0
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTamd64
+
+[Standard.NTamd64]
+%DeviceName%=USB_Install, USB\VID_0D28&PID_0204
+
+[USB_Install]
+Include=winusb.inf
+Needs=WINUSB.NT
+
+[USB_Install.Services]
+Include=winusb.inf
+Needs=WINUSB.NT.Services
+
+[USB_Install.HW]
+AddReg=Dev_AddReg
+
+[Dev_AddReg]
+HKR,,DeviceInterfaceGUIDs,0x10000,"{CDB3B5AD-293B-4663-AA36-1AAE46463776}"
+
+[Strings]
+ManufacturerName="XingNian"
+DeviceName="ESP32-S3 CMSIS-DAP v2"
