@@ -8,8 +8,13 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "tinyusb.h"
+#include "tusb.h"
 
 static const char *TAG = "USB";
+
+// 外部声明描述符（确保链接器不优化掉）
+extern const tusb_desc_device_t desc_device;
+extern const uint8_t desc_fs_configuration[];
 
 /**
  * @brief 初始化 USB 设备 - 使用默认配置
@@ -17,7 +22,7 @@ static const char *TAG = "USB";
 int usb_init(void) {
     ESP_LOGI(TAG, "Initializing USB with default config...");
     
-    // 手动配置 - ESP32-S3 使用全速模式
+    // 手动配置 - ESP32-S3 使用全速模式，提供自定义描述符
     const tinyusb_config_t tusb_cfg = {
         .port = TINYUSB_PORT_FULL_SPEED_0,
         .phy = {
@@ -31,11 +36,11 @@ int usb_init(void) {
             .xCoreID = 0,
         },
         .descriptor = {
-            .device = NULL,              // 使用默认设备描述符
+            .device = &desc_device,
             .qualifier = NULL,
             .string = NULL,
             .string_count = 0,
-            .full_speed_config = NULL,   // 使用默认配置描述符
+            .full_speed_config = desc_fs_configuration,
             .high_speed_config = NULL,
         },
         .event_cb = NULL,

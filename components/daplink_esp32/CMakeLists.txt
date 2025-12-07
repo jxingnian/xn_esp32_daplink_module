@@ -5,6 +5,7 @@ idf_component_register(
         "hic_hal/esp32s3/usb_buf.c"
         "port/esp32_port.c"
         "usb/usb_init.c"
+        "usb/usb_descriptors.c"
     INCLUDE_DIRS 
         "include"
         "hic_hal/esp32s3"
@@ -13,4 +14,5 @@ idf_component_register(
         esp_timer
         freertos
         espressif__esp_tinyusb
+        espressif__tinyusb
 )
