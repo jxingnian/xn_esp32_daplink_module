@@ -6,7 +6,9 @@
  */
 
 #include "esp_log.h"
+#include "esp_err.h"
 #include "tinyusb.h"
+#include "tinyusb_cdc_acm.h"
 
 static const char *TAG = "USB";
 
@@ -49,5 +51,19 @@ int usb_init(void) {
     }
     
     ESP_LOGI(TAG, "TinyUSB driver installed successfully");
+    
+    // 初始化 CDC-ACM，使主机识别为虚拟串口（最小占位实现）
+    const tinyusb_config_cdcacm_t acm_cfg = {
+        .callback_rx = NULL,
+        .callback_rx_wanted_char = NULL,
+        .callback_line_state_changed = NULL,
+        .callback_line_coding_changed = NULL,
+    };
+    ret = tinyusb_cdcacm_init(&acm_cfg);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to init CDC-ACM: %s", esp_err_to_name(ret));
+        return -1;
+    }
+    ESP_LOGI(TAG, "CDC-ACM initialized");
     return 0;
 }
