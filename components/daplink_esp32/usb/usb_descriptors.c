@@ -49,13 +49,3 @@ const uint8_t desc_fs_configuration[] __attribute__((used)) = {
     TUD_VENDOR_DESCRIPTOR(ITF_NUM_VENDOR, 0, EPNUM_VENDOR_OUT, EPNUM_VENDOR_IN, 64)
 };
 
-// 字符串描述符
-const char* string_desc_arr[] = {
-    (const char[]) { 0x09, 0x04 },  // 0: 语言 (English)
-    "XingNian",                      // 1: 制造商
-    "ESP32-S3 CMSIS-DAP v2",         // 2: 产品
-    "123456"                         // 3: 序列号
-};
-
-// 注意：TinyUSB 回调函数由 espressif__esp_tinyusb 组件提供
-// 我们只需要通过 tinyusb_config_t 传递描述符指针即可
