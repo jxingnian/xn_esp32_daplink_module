@@ -4,13 +4,15 @@
 
 ## 项目概述
 
-本项目旨在将 ARM Mbed DAPLink 固件移植到 ESP32-S3 平台，实现一个功能完整的 USB 调试器，支持：
-- ✅ CMSIS-DAP v1/v2 调试协议
-- ✅ SWD (Serial Wire Debug) 接口
-- ✅ JTAG 接口
-- ✅ 虚拟串口 (CDC)
-- ✅ 拖放式烧录 (MSC)
-- ✅ SWO 跟踪输出
+基于 ESP32-S3 实现 CMSIS-DAP v2 调试器（USB Bulk 传输），支持 Keil/IAR/OpenOCD 等工具。
+
+**核心特性**：
+- CMSIS-DAP v2 协议（USB Bulk，高速传输）
+- SWD (Serial Wire Debug) 接口
+- JTAG 接口（可选）
+- 免驱动（WinUSB）
+- 虚拟串口 (CDC) - 后续
+- 拖放式烧录 (MSC) - 后续
 
 ---
 
@@ -47,36 +49,15 @@ ESP32-S3 GPIO 分配：
 ## 系统架构设计
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   USB 主机 (PC)                      │
-└─────────────────────────────────────────────────────┘
-                        ↓ USB
-┌─────────────────────────────────────────────────────┐
-│              ESP32-S3 DAPLink 固件                   │
-├─────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│  │  USB HID    │  │  USB CDC    │  │  USB MSC    │ │
-│  │ (CMSIS-DAP) │  │  (虚拟串口)  │  │  (虚拟U盘)  │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘ │
-│         ↓                 ↓                 ↓        │
-│  ┌──────────────────────────────────────────────┐  │
-│  │         TinyUSB 复合设备协议栈                │  │
-│  └──────────────────────────────────────────────┘  │
-│         ↓                                            │
-│  ┌──────────────────────────────────────────────┐  │
-│  │         CMSIS-DAP 协议处理层                  │  │
-│  │  • DAP 命令解析  • SWD/JTAG 协议             │  │
-│  └──────────────────────────────────────────────┘  │
-│         ↓                                            │
-│  ┌──────────────────────────────────────────────┐  │
-│  │         ESP32-S3 硬件抽象层 (HAL)             │  │
-│  │  • GPIO 控制  • 定时器  • 中断管理           │  │
-│  └──────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────┘
-                        ↓ SWD/JTAG
-┌─────────────────────────────────────────────────────┐
-│              目标 MCU (ARM Cortex-M)                 │
-└─────────────────────────────────────────────────────┘
+PC (Keil/OpenOCD)
+      ↓ USB Bulk (WinUSB)
+ESP32-S3 CMSIS-DAP v2
+      ├─ USB Bulk 端点 (IN/OUT)
+      ├─ DAP 命令处理
+      ├─ SWD/JTAG 协议
+      └─ GPIO 时序控制
+      ↓ SWD/JTAG
+目标 MCU (ARM Cortex-M)
 ```
 
 ---
@@ -122,40 +103,17 @@ IRAM_ATTR void swd_write_byte(uint8_t data) {
 
 ---
 
-### 挑战 2：USB 复合设备实现
+### 挑战 2：USB Bulk 传输实现
 
 **问题描述**：
-- 需要同时实现 HID + CDC + MSC 三种 USB 类
-- DAPLink 原生 USB 栈与 ESP-IDF 不兼容
+- CMSIS-DAP v2 使用 USB Bulk 端点（非 HID）
+- 需要 WinUSB 驱动支持
+- ESP-IDF TinyUSB 对 Bulk 传输支持有限
 
 **解决方案**：
-使用 TinyUSB 框架（ESP-IDF 已集成）
-
-```c
-// sdkconfig 配置
-CONFIG_TINYUSB_ENABLED=y
-CONFIG_TINYUSB_HID_ENABLED=y
-CONFIG_TINYUSB_CDC_ENABLED=y
-CONFIG_TINYUSB_MSC_ENABLED=y
-
-// USB 描述符配置
-static const tusb_desc_device_t dap_device_desc = {
-    .bLength            = sizeof(tusb_desc_device_t),
-    .bDescriptorType    = TUSB_DESC_DEVICE,
-    .bcdUSB             = 0x0200,
-    .bDeviceClass       = 0x00,  // 复合设备
-    .bDeviceSubClass    = 0x00,
-    .bDeviceProtocol    = 0x00,
-    .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
-    .idVendor           = 0x0D28,  // ARM Ltd
-    .idProduct          = 0x0204,  // DAPLink
-    .bcdDevice          = 0x0100,
-    .iManufacturer      = 0x01,
-    .iProduct           = 0x02,
-    .iSerialNumber      = 0x03,
-    .bNumConfigurations = 0x01
-};
-```
+- 使用 TinyUSB Vendor 类实现自定义 Bulk 端点
+- 配置 WinUSB 兼容描述符
+- VID/PID: 0x0D28/0x0204 (ARM DAPLink)
 
 ---
 
@@ -253,38 +211,6 @@ static const flash_algo_t *supported_algos[] = {
 
 **验收标准**：
 - ✅ 项目可以编译通过
-- ✅ GPIO 可以正常初始化
-- ✅ LED 可以闪烁
-
----
-
-### 阶段 2：USB 复合设备框架 (第 3-4 周)
-
-**目标**：搭建支持多接口的 USB 复合设备框架
-
-**任务清单**：
-- [ ] 配置 TinyUSB 复合设备
-  - [ ] HID 接口（CMSIS-DAP v1）
-  - [ ] Vendor 接口（CMSIS-DAP v2 Bulk）
-  - [ ] CDC 接口（虚拟串口，预留）
-- [ ] 实现 USB 描述符
-  ```c
-  // 复合设备配置
-  #define USBD_VID           0x0D28  // ARM Ltd
-  #define USBD_PID           0x0204  // DAPLink
-  
-  // 接口分配
-  #define ITF_NUM_HID        0       // CMSIS-DAP v1
-  #define ITF_NUM_VENDOR     1       // CMSIS-DAP v2
-  #define ITF_NUM_CDC        2       // 虚拟串口
-  ```
-- [ ] 实现 WinUSB 描述符（v2 免驱动支持）
-- [ ] 测试 USB 枚举
-
-**验收标准**：
-- ✅ PC 可以识别复合设备
-- ✅ 显示多个接口
-- ✅ Windows 10+ 免驱动识别
 
 ---
 
