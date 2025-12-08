@@ -62,7 +62,19 @@ extern "C" {
 #define SWO_MANCHESTER          0
 
 /// 支持原子命令
-#define DAP_ATOMIC_COMMANDS     0
+#define DAP_ATOMIC_COMMANDS     1
+
+/// CPU 时钟频率 (Hz)
+#define CPU_CLOCK               240000000
+
+/// I/O 端口写操作周期数
+#define IO_PORT_WRITE_CYCLES    2
+
+/// 默认调试端口 (1=SWD, 2=JTAG)
+#define DAP_DEFAULT_PORT        1
+
+/// 默认 SWD/JTAG 时钟频率 (Hz)
+#define DAP_DEFAULT_SWJ_CLOCK   1000000
 
 /* ==================== GPIO 宏定义 ==================== */
 
@@ -71,19 +83,22 @@ extern "C" {
 #include "soc/gpio_struct.h"
 #include "soc/soc.h"
 
+// 定义内联宏
+#ifndef __STATIC_FORCEINLINE
+#define __STATIC_FORCEINLINE static inline __attribute__((always_inline))
+#endif
+
 /* ==================== SWD 引脚操作宏 ==================== */
 
 /// SWCLK 引脚设置为高电平（直接寄存器操作，2-3 CPU周期）
-static inline void PIN_SWCLK_SET_INLINE(void) {
-    REG_WRITE(GPIO_OUT_W1TS_REG, (1UL << PIN_SWCLK));
+__STATIC_FORCEINLINE void PIN_SWCLK_SET(void) {
+    GPIO.out_w1ts = (1UL << PIN_SWCLK);
 }
-#define PIN_SWCLK_SET()         PIN_SWCLK_SET_INLINE()
 
 /// SWCLK 引脚设置为低电平
-static inline void PIN_SWCLK_CLR_INLINE(void) {
-    REG_WRITE(GPIO_OUT_W1TC_REG, (1UL << PIN_SWCLK));
+__STATIC_FORCEINLINE void PIN_SWCLK_CLR(void) {
+    GPIO.out_w1tc = (1UL << PIN_SWCLK);
 }
-#define PIN_SWCLK_CLR()         PIN_SWCLK_CLR_INLINE()
 
 /// SWDIO 引脚设置为输出模式（初始化时调用，不需要高速）
 #define PIN_SWDIO_OUT_ENABLE()  gpio_set_direction(PIN_SWDIO, GPIO_MODE_OUTPUT)
@@ -92,22 +107,19 @@ static inline void PIN_SWCLK_CLR_INLINE(void) {
 #define PIN_SWDIO_OUT_DISABLE() gpio_set_direction(PIN_SWDIO, GPIO_MODE_INPUT)
 
 /// SWDIO 引脚设置为高电平（直接寄存器操作）
-static inline void PIN_SWDIO_SET_INLINE(void) {
-    REG_WRITE(GPIO_OUT_W1TS_REG, (1UL << PIN_SWDIO));
+__STATIC_FORCEINLINE void PIN_SWDIO_SET(void) {
+    GPIO.out_w1ts = (1UL << PIN_SWDIO);
 }
-#define PIN_SWDIO_SET()         PIN_SWDIO_SET_INLINE()
 
 /// SWDIO 引脚设置为低电平
-static inline void PIN_SWDIO_CLR_INLINE(void) {
-    REG_WRITE(GPIO_OUT_W1TC_REG, (1UL << PIN_SWDIO));
+__STATIC_FORCEINLINE void PIN_SWDIO_CLR(void) {
+    GPIO.out_w1tc = (1UL << PIN_SWDIO);
 }
-#define PIN_SWDIO_CLR()         PIN_SWDIO_CLR_INLINE()
 
 /// 读取 SWDIO 引脚电平（直接寄存器读取）
-static inline uint32_t PIN_SWDIO_IN_INLINE(void) {
-    return (REG_READ(GPIO_IN_REG) >> PIN_SWDIO) & 1UL;
+__STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void) {
+    return ((GPIO.in >> PIN_SWDIO) & 1UL);
 }
-#define PIN_SWDIO_IN()          PIN_SWDIO_IN_INLINE()
 
 /* ==================== JTAG 引脚操作宏 ==================== */
 

@@ -50,11 +50,11 @@ const uint8_t desc_fs_configuration[] __attribute__((used)) = {
     // 接口描述符
     9, TUSB_DESC_INTERFACE, ITF_NUM_VENDOR, 0, 2, 0xFF, 0x00, 0x00, 0,
     
-    // Bulk OUT 端点
-    7, TUSB_DESC_ENDPOINT, EPNUM_VENDOR_OUT, TUSB_XFER_BULK, U16_TO_U8S_LE(512), 0,
+    // Bulk OUT 端点 (Full Speed 最大 64 字节)
+    7, TUSB_DESC_ENDPOINT, EPNUM_VENDOR_OUT, TUSB_XFER_BULK, U16_TO_U8S_LE(64), 0,
     
-    // Bulk IN 端点  
-    7, TUSB_DESC_ENDPOINT, EPNUM_VENDOR_IN, TUSB_XFER_BULK, U16_TO_U8S_LE(512), 0
+    // Bulk IN 端点 (Full Speed 最大 64 字节)
+    7, TUSB_DESC_ENDPOINT, EPNUM_VENDOR_IN, TUSB_XFER_BULK, U16_TO_U8S_LE(64), 0
 };
 
 // Microsoft OS 2.0 描述符长度
