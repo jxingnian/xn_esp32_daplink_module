@@ -2,8 +2,8 @@
  * @Author: 星年 jixingnian@gmail.com
  * @Date: 2025-12-04
  * @LastEditors: xingnian jixingnian@gmail.com
- * @LastEditTime: 2025-12-04 10:50:05
- * @FilePath: \DAPLinkf:\code\xn_esp32_compoents\xn_esp32_daplink_module\main\main.c
+ * @LastEditTime: 2025-12-08 17:37:44
+ * @FilePath: \todo-xn_esp32_daplink_module\main\main.c
  * @Description: ESP32-S3 DAPLink 主程序
  */
 
@@ -18,22 +18,6 @@
 #include "dap_handler.h"
 
 static const char *TAG = "MAIN";
-
-/**
- * @brief 测试任务 - LED 闪烁
- */
-void led_test_task(void *pvParameters)
-{
-    ESP_LOGI(TAG, "LED test task started");
-    
-    while (1) {
-        // LED 闪烁 3 次
-        gpio_hal_led_blink(0, 3, 200);
-        
-        // 等待 2 秒
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }
-}
 
 /**
  * @brief 主函数
@@ -70,20 +54,11 @@ void app_main(void)
         ESP_LOGE(TAG, "Failed to initialize USB");
         return;
     }
-    
-    // 启动测试 LED 闪烁
-    ESP_LOGI(TAG, "Starting LED test...");
-    gpio_hal_set_led(0, true);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    gpio_hal_set_led(0, false);
-    vTaskDelay(pdMS_TO_TICKS(500));
+
     
     // 初始化 DAP 处理器
     ESP_LOGI(TAG, "Initializing DAP handler...");
     dap_handler_init();
-    
-    // 创建 LED 测试任务
-    xTaskCreate(led_test_task, "led_test", 2048, NULL, 5, NULL);
     
     ESP_LOGI(TAG, "System ready!");
     ESP_LOGI(TAG, "CMSIS-DAP v2 ready for Keil/OpenOCD!");
