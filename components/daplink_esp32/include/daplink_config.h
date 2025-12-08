@@ -38,8 +38,8 @@ extern "C" {
 
 /* ==================== GPIO 引脚配置 ==================== */
 // SWD 接口引脚
-#define PIN_SWCLK                   GPIO_NUM_1      // SWD 时钟
-#define PIN_SWDIO                   GPIO_NUM_2      // SWD 数据
+#define PIN_SWCLK                   GPIO_NUM_9      // SWD 时钟
+#define PIN_SWDIO                   GPIO_NUM_8      // SWD 数据
 
 // JTAG 接口引脚
 #define PIN_TCK                     GPIO_NUM_7      // JTAG 时钟

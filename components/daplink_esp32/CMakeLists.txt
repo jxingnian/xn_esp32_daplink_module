@@ -7,9 +7,11 @@ idf_component_register(
         "usb/usb_init.c"
         "usb/usb_descriptors.c"
         "dap/dap_handler.c"
+        "dap/SW_DP.c"
     INCLUDE_DIRS 
         "include"
         "hic_hal/esp32s3"
+        "dap"
     REQUIRES
         driver
         esp_timer

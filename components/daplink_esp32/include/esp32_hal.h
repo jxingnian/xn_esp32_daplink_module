@@ -54,6 +54,17 @@ void gpio_hal_set_reset(bool state);
  */
 bool gpio_hal_get_reset(void);
 
+/**
+ * @brief 连接到目标设备
+ * @param port 端口类型 (1: SWD, 2: JTAG)
+ */
+void PORT_SWJ_CONNECT(uint32_t port);
+
+/**
+ * @brief 断开与目标设备的连接
+ */
+void PORT_SWJ_DISCONNECT(void);
+
 /* ==================== UART 接口 ==================== */
 
 /**
