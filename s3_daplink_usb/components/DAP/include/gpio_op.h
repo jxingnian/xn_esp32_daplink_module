@@ -58,7 +58,7 @@ __STATIC_INLINE __UNUSED void GPIO_FUNCTION_SET(int io_num)
 #elif defined CONFIG_IDF_TARGET_ESP32S3
 __STATIC_INLINE __UNUSED void GPIO_FUNCTION_SET(int io_num)
 {
-  gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[io_num], PIN_FUNC_GPIO);
+  gpio_ll_func_sel(&GPIO, io_num, PIN_FUNC_GPIO);
 }
 #endif
 
@@ -156,13 +156,15 @@ __STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
 #endif
 
 #if defined CONFIG_IDF_TARGET_ESP32S3
-#define SWCLK_SET() do { asm volatile("ee.set_bit_gpio_out 0x2"); } while (0)
-#define SWCLK_CLR() do { asm volatile("ee.clr_bit_gpio_out 0x2"); } while (0)
-#define SWDIO_SET() do { asm volatile("ee.set_bit_gpio_out 0x1"); } while (0)
-#define SWDIO_CLR() do { asm volatile("ee.clr_bit_gpio_out 0x1"); } while (0)
+// Use standard GPIO for ESP32-S3 (simpler, slightly slower than dedicated GPIO)
+// PIN_SWCLK = GPIO12, PIN_SWDIO_MOSI = GPIO11
+#define SWCLK_SET() do { gpio_ll_set_level(&GPIO, 12, 1); } while (0)
+#define SWCLK_CLR() do { gpio_ll_set_level(&GPIO, 12, 0); } while (0)
+#define SWDIO_SET() do { gpio_ll_set_level(&GPIO, 11, 1); } while (0)
+#define SWDIO_CLR() do { gpio_ll_set_level(&GPIO, 11, 0); } while (0)
 #define SWDIO_GET_IN() \
   ({ \
-    cpu_ll_read_dedic_gpio_in() & 0x1; \
+    gpio_ll_get_level(&GPIO, 11); \
   })
 #elif defined CONFIG_IDF_TARGET_ESP32C3
 #define SWCLK_SET() do { RV_SET_CSR(CSR_GPIO_OUT_USER, 2); } while(0)

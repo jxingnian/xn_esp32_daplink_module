@@ -1848,9 +1848,3 @@ void DAP_Setup(void) {
 
   DAP_SETUP();  // Device specific setup
 }
-
-
-void dap_os_delay(int ms)
-{
-  vTaskDelay(pdMS_TO_TICKS(ms));
-}

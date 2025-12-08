@@ -26,48 +26,18 @@
 #include "spi_switch.h"
 #include "gpio_common.h"
 
-#ifdef CONFIG_IDF_TARGET_ESP8266
-    #define DAP_SPI SPI1
-#elif defined CONFIG_IDF_TARGET_ESP32
-    #define DAP_SPI SPI2
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-    #define DAP_SPI GPSPI2
-#elif defined CONFIG_IDF_TARGET_ESP32S3
-    #define DAP_SPI GPSPI2
-#else
-    #error unknown hardware
-#endif
+// ESP32-S3 专用
+#define DAP_SPI GPSPI2
 
-
-#ifdef CONFIG_IDF_TARGET_ESP8266
-    #define SET_MOSI_BIT_LEN(x) DAP_SPI.user1.usr_mosi_bitlen = x
-    #define SET_MISO_BIT_LEN(x) DAP_SPI.user1.usr_miso_bitlen = x
-    #define START_AND_WAIT_SPI_TRANSMISSION_DONE() \
-        do {                                       \
-            DAP_SPI.cmd.usr = 1;                   \
-            while (DAP_SPI.cmd.usr) continue;      \
-        } while(0)
-
-#elif defined CONFIG_IDF_TARGET_ESP32
-    #define SET_MOSI_BIT_LEN(x) DAP_SPI.mosi_dlen.usr_mosi_dbitlen = x
-    #define SET_MISO_BIT_LEN(x) DAP_SPI.miso_dlen.usr_miso_dbitlen = x
-    #define START_AND_WAIT_SPI_TRANSMISSION_DONE() \
-        do {                                       \
-            DAP_SPI.cmd.usr = 1;                   \
-            while (DAP_SPI.cmd.usr) continue;      \
-        } while(0)
-
-#elif defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
-    #define SET_MOSI_BIT_LEN(x) DAP_SPI.ms_dlen.ms_data_bitlen = x
-    #define SET_MISO_BIT_LEN(x) DAP_SPI.ms_dlen.ms_data_bitlen = x
-    #define START_AND_WAIT_SPI_TRANSMISSION_DONE() \
-        do {                                       \
-            DAP_SPI.cmd.update = 1;                \
-            while (DAP_SPI.cmd.update) continue;   \
-            DAP_SPI.cmd.usr = 1;                   \
-            while (DAP_SPI.cmd.usr) continue;      \
-        } while(0)
-#endif
+#define SET_MOSI_BIT_LEN(x) DAP_SPI.ms_dlen.ms_data_bitlen = x
+#define SET_MISO_BIT_LEN(x) DAP_SPI.ms_dlen.ms_data_bitlen = x
+#define START_AND_WAIT_SPI_TRANSMISSION_DONE() \
+    do {                                       \
+        DAP_SPI.cmd.update = 1;                \
+        while (DAP_SPI.cmd.update) continue;   \
+        DAP_SPI.cmd.usr = 1;                   \
+        while (DAP_SPI.cmd.usr) continue;      \
+    } while(0)
 
 /**
  * @brief Calculate integer division and round up

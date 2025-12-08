@@ -6,6 +6,7 @@ idf_component_register(
         "source/JTAG_DP.c"
         "source/spi_switch.c"
         "source/spi_op.c"
+        "source/dap_utility.c"
     INCLUDE_DIRS
         "include"
         "config"

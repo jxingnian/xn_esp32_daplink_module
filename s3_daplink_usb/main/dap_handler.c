@@ -1,3 +1,13 @@
+/*
+ * @Author: 星年 && jixingnian@gmail.com
+ * @Date: 2025-12-08 21:23:12
+ * @LastEditors: xingnian jixingnian@gmail.com
+ * @LastEditTime: 2025-12-08 21:29:27
+ * @FilePath: \todo-xn_esp32_daplink_module\s3_daplink_usb\main\dap_handler.c
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ */
 /**
  * @file dap_handler.c
  * @brief DAP command handler for USB Vendor class
@@ -8,6 +18,7 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "tusb.h"
+#include "DAP_config.h"
 #include "DAP.h"
 
 static const char *TAG = "DAP_HANDLER";

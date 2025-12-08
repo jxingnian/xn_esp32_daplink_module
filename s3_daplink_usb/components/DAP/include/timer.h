@@ -14,14 +14,14 @@
 // Timestamp clock frequency (5 MHz)
 #define TIMESTAMP_CLOCK 5000000U
 
-// Get current timestamp in microseconds
-static inline uint32_t dap_get_timestamp(void)
+// Get current timestamp (used by DAP_config.h TIMESTAMP_GET)
+static inline uint32_t get_timer_count(void)
 {
     return (uint32_t)(esp_timer_get_time() * 5);  // Convert us to 5MHz ticks
 }
 
-// Delay in milliseconds
-static inline void dap_os_delay(uint32_t ms)
+// Delay in milliseconds (used by DAP_config.h osDelay macro)
+static inline void dap_os_delay(int ms)
 {
     vTaskDelay(pdMS_TO_TICKS(ms));
 }

@@ -68,9 +68,7 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
     case ID_DAP_Vendor5:  break;
     case ID_DAP_Vendor6:  break;
     case ID_DAP_Vendor7:  break;
-    case ID_DAP_Vendor8:
-      num = el_vendor_command(request, response);
-      break;
+    case ID_DAP_Vendor8:  break;
     case ID_DAP_Vendor9:  break;
     case ID_DAP_Vendor10: break;
     case ID_DAP_Vendor11: break;
