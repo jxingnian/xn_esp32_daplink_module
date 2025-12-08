@@ -1,7 +1,7 @@
 # ESP-IDF 构建文件
 build/
-managed_components/
 .vscode/
+managed_components/
 temp/
 
 # ESP-IDF 配置文件
