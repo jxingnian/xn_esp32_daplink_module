@@ -2,6 +2,7 @@
 build/
 managed_components/
 .vscode/
+temp/
 
 # ESP-IDF 配置文件
 sdkconfig

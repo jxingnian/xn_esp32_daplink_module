@@ -240,3 +240,48 @@ const uint8_t desc_ms_os_20[] __attribute__((used)) = {
     // Property data: {CDB3B5AD-293B-4663-AA36-1AAE46463776}
     '{', 0, 'C', 0, 'D', 0, 'B', 0, '3', 0, 'B', 0, '5', 0, 'A', 0, 'D', 0, '-', 0, '2', 0, '9', 0, '3', 0, 'B', 0, '-', 0, '4', 0, '6', 0, '6', 0, '3', 0, '-', 0, 'A', 0, 'A', 0, '3', 0, '6', 0, '-', 0, '1', 0, 'A', 0, 'A', 0, 'E', 0, '4', 0, '6', 0, '4', 0, '6', 0, '3', 0, '7', 0, '7', 0, '6', 0, '}', 0, 0, 0, 0, 0
 };
+
+/* ==================== TinyUSB 回调函数（补充 esp_tinyusb 未提供的部分）==================== */
+
+/**
+ * @brief BOS 描述符回调函数
+ * 
+ * esp_tinyusb 组件没有提供此回调，需要我们自己实现。
+ * 当主机请求 BOS 描述符时，TinyUSB 会调用此函数。
+ * 
+ * @return 指向 BOS 描述符的指针
+ */
+uint8_t const* tud_descriptor_bos_cb(void)
+{
+    return desc_bos;
+}
+
+/**
+ * @brief Vendor 类控制传输回调函数
+ * 
+ * esp_tinyusb 组件没有提供此回调，需要我们自己实现。
+ * 处理 Vendor 类的控制请求，主要用于返回 MS OS 2.0 描述符。
+ * 
+ * @param rhport USB 端口号
+ * @param stage 控制传输阶段 (SETUP/DATA/ACK)
+ * @param request 控制请求结构体
+ * @return true 请求处理成功，false 请求不支持（STALL）
+ */
+bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
+{
+    // 只处理 SETUP 阶段
+    if (stage != CONTROL_STAGE_SETUP) {
+        return true;
+    }
+
+    // 检查是否是 MS OS 2.0 描述符请求
+    // bRequest = 1 (BOS 描述符中定义的 Vendor Code)
+    // wIndex = 7 (MS OS 2.0 描述符集请求)
+    if (request->bRequest == 1 && request->wIndex == 7) {
+        // 返回 MS OS 2.0 描述符
+        return tud_control_xfer(rhport, request, (void*)(uintptr_t)desc_ms_os_20, MS_OS_20_DESC_LEN);
+    }
+
+    // 不支持的请求
+    return false;
+}
