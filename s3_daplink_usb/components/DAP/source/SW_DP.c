@@ -82,7 +82,14 @@
 /**
  * likely/unlikely 分支预测提示
  * 告诉编译器哪个分支更可能执行，优化指令流水线
+ * 注意：ESP-IDF 的 esp_compiler.h 可能已定义这些宏，需要先取消再重新定义
  */
+#ifdef likely
+#undef likely
+#endif
+#ifdef unlikely
+#undef unlikely
+#endif
 #define likely(x)    __builtin_expect(!!(x), 1)   /* x 很可能为真 */
 #define unlikely(x)  __builtin_expect(!!(x), 0)   /* x 很可能为假 */
 
