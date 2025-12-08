@@ -1,0 +1,15 @@
+idf_component_register(
+    SRCS
+        "source/DAP.c"
+        "source/DAP_vendor.c"
+        "source/SW_DP.c"
+        "source/JTAG_DP.c"
+        "source/spi_switch.c"
+        "source/spi_op.c"
+    INCLUDE_DIRS
+        "include"
+        "config"
+    REQUIRES
+        driver
+        esp_timer
+)
