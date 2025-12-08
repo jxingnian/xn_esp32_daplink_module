@@ -3,7 +3,6 @@ idf_component_register(
         "source/DAP.c"
         "source/DAP_vendor.c"
         "source/SW_DP.c"
-        "source/JTAG_DP.c"
         "source/spi_switch.c"
         "source/spi_op.c"
         "source/dap_utility.c"

@@ -1,41 +1,39 @@
 /*
- * Copyright (c) 2013-2017 ARM Limited. All rights reserved.
+ * 版权所有 (c) 2013-2017 ARM Limited. 保留所有权利。
  *
  * SPDX-License-Identifier: Apache-2.0
  *
- * Licensed under the Apache License, Version 2.0 (the License); you may
- * not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * 根据 Apache 许可证 2.0 版本（"许可证"）授权；
+ * 除非遵守许可证，否则您不得使用此文件。
+ * 您可以在以下网址获取许可证副本：
  *
  * www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an AS IS BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 除非适用法律要求或书面同意，否则根据许可证分发的软件
+ * 按"原样"分发，不附带任何明示或暗示的担保或条件。
+ * 请参阅许可证以了解管理权限和限制的具体语言。
  *
  * ----------------------------------------------------------------------
  *
- * $Date:        16. June 2021
+ * $Date:        2021年6月16日
  * $Revision:    V2.1.0
  *
- * Project:      CMSIS-DAP Configuration
- * Title:        DAP_config.h CMSIS-DAP Configuration File (Template)
+ * 项目:      CMSIS-DAP 配置
+ * 标题:      DAP_config.h CMSIS-DAP 配置文件（模板）
  *
  *---------------------------------------------------------------------------*/
 
 /**
  * @file DAP_config.h
  * @author windowsair
- * @brief Adaptation of GPIO and SPI pin
- * @change: 2021-2-10 Support GPIO and SPI
- *          2021-2-18 Try to support SWO
- *          2024-1-28 Update to CMSIS-DAP v2.1.0
+ * @brief GPIO 和 SPI 引脚适配
+ * @change: 2021-2-10 支持 GPIO 和 SPI
+ *          2021-2-18 尝试支持 SWO
+ *          2024-1-28 更新至 CMSIS-DAP v2.1.0
  * @version 0.3
  * @date 2024-1-28
  *
- * @copyright Copyright (c) 2021-2024
+ * @copyright 版权所有 (c) 2021-2024
  *
  */
 
@@ -45,6 +43,9 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+
+#include "esp_mac.h"
 
 #include "dap_configuration.h"
 #include "timer.h"
@@ -54,186 +55,161 @@
 #include "spi_switch.h"
 
 
-#ifdef CONFIG_IDF_TARGET_ESP8266
-  #include "gpio.h"
-  #include "esp8266/include/esp8266/gpio_struct.h"
-  #include "esp8266/pin_mux_register.h"
-#elif defined CONFIG_IDF_TARGET_ESP32
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-#elif defined CONFIG_IDF_TARGET_ESP32S3
-#else
-  #error unknown hardware
+// 仅支持 ESP32-S3
+#ifndef CONFIG_IDF_TARGET_ESP32S3
+  #error "This project only supports ESP32-S3"
 #endif
 
 
 
 //**************************************************************************************************
 /**
-\defgroup DAP_Config_Debug_gr CMSIS-DAP Debug Unit Information
+\defgroup DAP_Config_Debug_gr CMSIS-DAP 调试单元信息
 \ingroup DAP_ConfigIO_gr
 @{
-Provides definitions about the hardware and configuration of the Debug Unit.
+提供关于调试单元硬件和配置的定义。
 
-This information includes:
- - Definition of Cortex-M processor parameters used in CMSIS-DAP Debug Unit.
- - Debug Unit Identification strings (Vendor, Product, Serial Number).
- - Debug Unit communication packet size.
- - Debug Access Port supported modes and settings (JTAG/SWD and SWO).
- - Optional information about a connected Target Device (for Evaluation Boards).
+此信息包括：
+ - 定义 CMSIS-DAP 调试单元中使用的 Cortex-M 处理器参数。
+ - 调试单元标识字符串（厂商、产品、序列号）。
+ - 调试单元通信数据包大小。
+ - 调试访问端口支持的模式和设置（JTAG/SWD 和 SWO）。
+ - 关于连接目标设备的可选信息（用于评估板）。
 */
 
 //#ifdef _RTE_
 //#include "RTE_Components.h"
 //#include CMSIS_device_header
 //#else
-//#include "device.h"                             // Debug Unit Cortex-M Processor Header File
+//#include "device.h"                             // 调试单元 Cortex-M 处理器头文件
 //#endif
 
-/// Processor Clock of the Cortex-M MCU used in the Debug Unit.
-/// This value is used to calculate the SWD/JTAG clock speed.
-#ifdef CONFIG_IDF_TARGET_ESP8266
-  #define CPU_CLOCK 160000000 ///< Specifies the CPU Clock in Hz.
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<160MHz
-#elif defined CONFIG_IDF_TARGET_ESP32
-  #define CPU_CLOCK 240000000
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<240MHz
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-  #define CPU_CLOCK 16000000
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<160MHz
-#elif defined CONFIG_IDF_TARGET_ESP32S3
-  #define CPU_CLOCK 240000000
-#endif
+/// ESP32-S3 处理器时钟频率（240MHz）
+/// 此值用于计算 SWD/JTAG 时钟速度。
+#define CPU_CLOCK 240000000
 
 
 
-//#define MAX_USER_CLOCK 16000000 ///< Specifies the max Debug Clock in Hz.
+//#define MAX_USER_CLOCK 16000000 ///< 指定最大调试时钟频率（Hz）。
 
-/// Number of processor cycles for I/O Port write operations.
-/// This value is used to calculate the SWD/JTAG clock speed that is generated with I/O
-/// Port write operations in the Debug Unit by a Cortex-M MCU. Most Cortex-M processors
-/// require 2 processor cycles for a I/O Port Write operation.  If the Debug Unit uses
-/// a Cortex-M0+ processor with high-speed peripheral I/O only 1 processor cycle might be
-/// required.
-#define IO_PORT_WRITE_CYCLES 2U ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0.
+/// I/O 端口写操作所需的处理器周期数。
+/// 此值用于计算调试单元中 Cortex-M MCU 通过 I/O 端口写操作生成的 SWD/JTAG 时钟速度。
+/// 大多数 Cortex-M 处理器 I/O 端口写操作需要 2 个处理器周期。
+/// 如果调试单元使用带有高速外设 I/O 的 Cortex-M0+ 处理器，可能只需要 1 个处理器周期。
+#define IO_PORT_WRITE_CYCLES 2U ///< I/O 周期：2=默认，1=Cortex-M0+ 快速 I/O。
 
-/// Indicate that Serial Wire Debug (SWD) communication mode is available at the Debug Access Port.
-/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define DAP_SWD 1 ///< SWD Mode:  1 = available, 0 = not available.
+/// 指示调试访问端口是否支持串行线调试（SWD）通信模式。
+/// 此信息通过 \ref DAP_Info 命令作为 <b>Capabilities</b> 的一部分返回。
+#define DAP_SWD 1 ///< SWD 模式：1 = 可用，0 = 不可用。
 
-/// Indicate that JTAG communication mode is available at the Debug Port.
-/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define DAP_JTAG 1 ///< JTAG Mode: 1 = available, 0 = not available.
+/// 仅支持 SWD 模式
+#define DAP_JTAG 0
+#define DAP_JTAG_DEV_CNT 0U
+#define DAP_DEFAULT_PORT 1U ///< 默认端口模式：SWD
 
-/// Configure maximum number of JTAG devices on the scan chain connected to the Debug Access Port.
-/// This setting impacts the RAM requirements of the Debug Unit. Valid range is 1 .. 255.
-#define DAP_JTAG_DEV_CNT 8U ///< Maximum number of JTAG devices on scan chain.
+/// SWD 和 JTAG 模式下调试访问端口的默认通信速度。
+/// 用于初始化默认 SWD/JTAG 时钟频率。
+/// \ref DAP_SWJ_Clock 命令可用于覆盖此默认设置。
+#define DAP_DEFAULT_SWJ_CLOCK 1000000U ///< 默认 SWD/JTAG 时钟频率（Hz）.
 
-/// Default communication mode on the Debug Access Port.
-/// Used for the command \ref DAP_Connect when Port Default mode is selected.
-#define DAP_DEFAULT_PORT 1U ///< Default JTAG/SWJ Port Mode: 1 = SWD, 2 = JTAG.
 
-/// Default communication speed on the Debug Access Port for SWD and JTAG mode.
-/// Used to initialize the default SWD/JTAG clock frequency.
-/// The command \ref DAP_SWJ_Clock can be used to overwrite this default setting.
-#define DAP_DEFAULT_SWJ_CLOCK 1000000U ///< Default SWD/JTAG clock frequency in Hz.
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<1MHz
 
-/// Maximum Package Buffers for Command and Response data.
-/// This configuration settings is used to optimize the communication performance with the
-/// debugger and depends on the USB peripheral. For devices with limited RAM or USB buffer the
-/// setting can be reduced (valid range is 1 .. 255).
-#define DAP_PACKET_COUNT 255 ///< Specifies number of packets buffered.
+/// 命令和响应数据的最大数据包缓冲区数量。
+/// 此配置设置用于优化与调试器的通信性能，取决于 USB 外设。
+/// 对于 RAM 或 USB 缓冲区有限的设备，可以减少此设置（有效范围为 1 .. 255）。
+#define DAP_PACKET_COUNT 255 ///< 指定缓冲的数据包数量。
 
-/// Indicates that the SWO function(UART SWO & Streaming Trace) is available
-#define SWO_FUNCTION_ENABLE 0 ///< SWO function:  1 = available, 0 = not available.
+/// 指示 SWO 功能（UART SWO 和流式跟踪）是否可用
+#define SWO_FUNCTION_ENABLE 0 ///< SWO 功能：1 = 可用，0 = 不可用。
 
 
-/// Indicate that UART Serial Wire Output (SWO) trace is available.
-/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define SWO_UART SWO_FUNCTION_ENABLE ///< SWO UART:  1 = available, 0 = not available.
+/// 指示 UART 串行线输出（SWO）跟踪是否可用。
+/// 此信息通过 \ref DAP_Info 命令作为 <b>Capabilities</b> 的一部分返回。
+#define SWO_UART SWO_FUNCTION_ENABLE ///< SWO UART：1 = 可用，0 = 不可用。
 
-/// USART Driver instance number for the UART SWO.
-#define SWO_UART_DRIVER 0 ///< USART Driver instance number (Driver_USART#).
+/// UART SWO 的 USART 驱动程序实例号。
+#define SWO_UART_DRIVER 0 ///< USART 驱动程序实例号（Driver_USART#）。
 
-/// Maximum SWO UART Baudrate.
-#define SWO_UART_MAX_BAUDRATE (115200U * 40U) ///< SWO UART Maximum Baudrate in Hz.
+/// 最大 SWO UART 波特率。
+#define SWO_UART_MAX_BAUDRATE (115200U * 40U) ///< SWO UART 最大波特率（Hz）。
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<< 5MHz
-//// TODO: uncertain value
+//// TODO: 不确定的值
 
-/// Indicate that Manchester Serial Wire Output (SWO) trace is available.
-/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define SWO_MANCHESTER 0 ///< SWO Manchester:  1 = available, 0 = not available.
-// (windowsair)Do not modify. Not support.
+/// 指示曼彻斯特串行线输出（SWO）跟踪是否可用。
+/// 此信息通过 \ref DAP_Info 命令作为 <b>Capabilities</b> 的一部分返回。
+#define SWO_MANCHESTER 0 ///< SWO 曼彻斯特：1 = 可用，0 = 不可用。
+// (windowsair)请勿修改。不支持。
 
 
-/// SWO Trace Buffer Size.
-#define SWO_BUFFER_SIZE 2048U ///< SWO Trace Buffer Size in bytes (must be 2^n).
+/// SWO 跟踪缓冲区大小。
+#define SWO_BUFFER_SIZE 2048U ///< SWO 跟踪缓冲区大小（字节，必须为 2^n）。
 
-/// SWO Streaming Trace.
-#define SWO_STREAM SWO_FUNCTION_ENABLE ///< SWO Streaming Trace: 1 = available, 0 = not available.
+/// SWO 流式跟踪。
+#define SWO_STREAM SWO_FUNCTION_ENABLE ///< SWO 流式跟踪：1 = 可用，0 = 不可用。
 
-/// Clock frequency of the Test Domain Timer. Timer value is returned with \ref TIMESTAMP_GET.
-#define TIMESTAMP_CLOCK 5000000U ///< Timestamp clock in Hz (0 = timestamps not supported).
+/// 测试域定时器的时钟频率。定时器值通过 \ref TIMESTAMP_GET 返回。
+#define TIMESTAMP_CLOCK 5000000U ///< 时间戳时钟频率（Hz）（0 = 不支持时间戳）。
 // <<<<<<<<<<<<<<<<<<<<<5MHz
 
-/// Indicate that UART Communication Port is available.
-/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define DAP_UART                0               ///< DAP UART:  1 = available, 0 = not available.
+/// 指示 UART 通信端口是否可用。
+/// 此信息通过 \ref DAP_Info 命令作为 <b>Capabilities</b> 的一部分返回。
+#define DAP_UART                0               ///< DAP UART：1 = 可用，0 = 不可用。
 
-/// USART Driver instance number for the UART Communication Port.
-#define DAP_UART_DRIVER         1               ///< USART Driver instance number (Driver_USART#).
+/// UART 通信端口的 USART 驱动程序实例号。
+#define DAP_UART_DRIVER         1               ///< USART 驱动程序实例号（Driver_USART#）。
 
-/// UART Receive Buffer Size.
-#define DAP_UART_RX_BUFFER_SIZE 1024U           ///< Uart Receive Buffer Size in bytes (must be 2^n).
+/// UART 接收缓冲区大小。
+#define DAP_UART_RX_BUFFER_SIZE 1024U           ///< UART 接收缓冲区大小（字节，必须为 2^n）。
 
-/// UART Transmit Buffer Size.
-#define DAP_UART_TX_BUFFER_SIZE 1024U           ///< Uart Transmit Buffer Size in bytes (must be 2^n).
+/// UART 发送缓冲区大小。
+#define DAP_UART_TX_BUFFER_SIZE 1024U           ///< UART 发送缓冲区大小（字节，必须为 2^n）。
 
-/// Indicate that UART Communication via USB COM Port is available.
-/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define DAP_UART_USB_COM_PORT   0               ///< USB COM Port:  1 = available, 0 = not available.
+/// 指示是否可通过 USB COM 端口进行 UART 通信。
+/// 此信息通过 \ref DAP_Info 命令作为 <b>Capabilities</b> 的一部分返回。
+#define DAP_UART_USB_COM_PORT   0               ///< USB COM 端口：1 = 可用，0 = 不可用。
 
-/// Debug Unit is connected to fixed Target Device.
-/// The Debug Unit may be part of an evaluation board and always connected to a fixed
-/// known device. In this case a Device Vendor, Device Name, Board Vendor and Board Name strings
-/// are stored and may be used by the debugger or IDE to configure device parameters.
-#define TARGET_FIXED            1               ///< Target: 1 = known, 0 = unknown;
+/// 调试单元连接到固定目标设备。
+/// 调试单元可能是评估板的一部分，始终连接到固定的已知设备。
+/// 在这种情况下，存储设备厂商、设备名称、板卡厂商和板卡名称字符串，
+/// 可供调试器或 IDE 用于配置设备参数。
+#define TARGET_FIXED            1               ///< 目标：1 = 已知，0 = 未知；
 
-#define TARGET_DEVICE_VENDOR    ""                 ///< String indicating the Silicon Vendor
-#define TARGET_DEVICE_NAME      ""                 ///< String indicating the Target Device
-#define TARGET_BOARD_VENDOR     "windowsair"       ///< String indicating the Board Vendor
-#define TARGET_BOARD_NAME       "ESP wireless DAP" ///< String indicating the Board Name
+#define TARGET_DEVICE_VENDOR    ""                 ///< 指示芯片厂商的字符串
+#define TARGET_DEVICE_NAME      ""                 ///< 指示目标设备的字符串
+#define TARGET_BOARD_VENDOR     "windowsair"       ///< 指示板卡厂商的字符串
+#define TARGET_BOARD_NAME       "ESP wireless DAP" ///< 指示板卡名称的字符串
 
 #if TARGET_FIXED != 0
 #include <string.h>
-static const char TargetDeviceVendor [] = TARGET_DEVICE_VENDOR;
-static const char TargetDeviceName   [] = TARGET_DEVICE_NAME;
-static const char TargetBoardVendor  [] = TARGET_BOARD_VENDOR;
-static const char TargetBoardName    [] = TARGET_BOARD_NAME;
+static const char TargetDeviceVendor [] = TARGET_DEVICE_VENDOR;  // 目标设备厂商字符串
+static const char TargetDeviceName   [] = TARGET_DEVICE_NAME;    // 目标设备名称字符串
+static const char TargetBoardVendor  [] = TARGET_BOARD_VENDOR;   // 目标板卡厂商字符串
+static const char TargetBoardName    [] = TARGET_BOARD_NAME;     // 目标板卡名称字符串
 #endif
 
-#define osDelay(n) dap_os_delay(n)
+#define osDelay(n) dap_os_delay(n)  // 操作系统延时宏定义
 
 /**
- * @brief Get Vendor ID string.
+ * @brief 获取厂商 ID 字符串。
  *
- * @param str Pointer to buffer to store the string (max 60 characters).
- * @return String length. (including terminating NULL character) or 0 (no string).
+ * @param str 指向存储字符串的缓冲区指针（最大 60 个字符）。
+ * @return 字符串长度（包括终止 NULL 字符）或 0（无字符串）。
  */
 __STATIC_INLINE uint8_t DAP_GetVendorString(char *str)
 {
-  // In fact, Keil can get the corresponding information through USB
-  // without filling in this information.
+  // 实际上，Keil 可以通过 USB 获取相应信息，
+  // 无需填写此信息。
   // (void)str;
   strcpy(str, "windowsair");
   return (sizeof("windowsair"));
 }
 
 /**
- * @brief Get Product ID string.
+ * @brief 获取产品 ID 字符串。
  *
- * @param str Pointer to buffer to store the string (max 60 characters).
- * @return String length. (including terminating NULL character) or 0 (no string).
+ * @param str 指向存储字符串的缓冲区指针（最大 60 个字符）。
+ * @return 字符串长度（包括终止 NULL 字符）或 0（无字符串）。
  */
 __STATIC_INLINE uint8_t DAP_GetProductString(char *str)
 {
@@ -243,22 +219,28 @@ __STATIC_INLINE uint8_t DAP_GetProductString(char *str)
 }
 
 /**
- * @brief Get Serial Number string.
+ * @brief 获取序列号字符串。
  *
- * @param str Pointer to buffer to store the string (max 60 characters).
- * @return String length. (including terminating NULL character) or 0 (no string).
+ * 使用 ESP32-S3 的 MAC 地址作为唯一序列号，格式为 12 位十六进制字符串。
+ * 例如: "AABBCCDDEEFF"
+ *
+ * @param str 指向存储字符串的缓冲区（最大 60 字符）。
+ * @return 字符串长度（包括终止 NULL 字符），或 0（无字符串）。
  */
 __STATIC_INLINE uint8_t DAP_GetSerNumString(char *str)
 {
-  strcpy(str, "1234");
-  return (sizeof("1234"));
+  uint8_t mac[6];
+  esp_read_mac(mac, ESP_MAC_WIFI_STA);
+  sprintf(str, "%02X%02X%02X%02X%02X%02X",
+          mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  return 13U;  /* 12 字符 + 1 NULL */
 }
 
 /**
- * @brief Get Target Device Vendor string.
+ * @brief 获取目标设备厂商字符串。
  *
- * @param str Pointer to buffer to store the string (max 60 characters).
- * @return String length (including terminating NULL character) or 0 (no string).
+ * @param str 指向存储字符串的缓冲区指针（最大 60 个字符）。
+ * @return 字符串长度（包括终止 NULL 字符）或 0（无字符串）。
  */
 __STATIC_INLINE uint8_t DAP_GetTargetDeviceVendorString (char *str) {
 #if TARGET_FIXED != 0
@@ -274,10 +256,10 @@ __STATIC_INLINE uint8_t DAP_GetTargetDeviceVendorString (char *str) {
 }
 
 /**
- * @brief Get Target Device Name string.
+ * @brief 获取目标设备名称字符串。
  *
- * @param str Pointer to buffer to store the string (max 60 characters).
- * @return String length (including terminating NULL character) or 0 (no string).
+ * @param str 指向存储字符串的缓冲区指针（最大 60 个字符）。
+ * @return 字符串长度（包括终止 NULL 字符）或 0（无字符串）。
  */
 __STATIC_INLINE uint8_t DAP_GetTargetDeviceNameString (char *str) {
 #if TARGET_FIXED != 0
@@ -293,10 +275,10 @@ __STATIC_INLINE uint8_t DAP_GetTargetDeviceNameString (char *str) {
 }
 
 /**
- * @brief Get Target Board Vendor string.
+ * @brief 获取目标板卡厂商字符串。
  *
- * @param str Pointer to buffer to store the string (max 60 characters).
- * @return String length (including terminating NULL character) or 0 (no string).
+ * @param str 指向存储字符串的缓冲区指针（最大 60 个字符）。
+ * @return 字符串长度（包括终止 NULL 字符）或 0（无字符串）。
  */
 __STATIC_INLINE uint8_t DAP_GetTargetBoardVendorString (char *str) {
 #if TARGET_FIXED != 0
@@ -312,10 +294,10 @@ __STATIC_INLINE uint8_t DAP_GetTargetBoardVendorString (char *str) {
 }
 
 /**
- * @brief Get Target Board Name string.
+ * @brief 获取目标板卡名称字符串。
  *
- * @param str Pointer to buffer to store the string (max 60 characters).
- * @return String length (including terminating NULL character) or 0 (no string).
+ * @param str 指向存储字符串的缓冲区指针（最大 60 个字符）。
+ * @return 字符串长度（包括终止 NULL 字符）或 0（无字符串）。
  */
 __STATIC_INLINE uint8_t DAP_GetTargetBoardNameString (char *str) {
 #if TARGET_FIXED != 0
@@ -331,10 +313,10 @@ __STATIC_INLINE uint8_t DAP_GetTargetBoardNameString (char *str) {
 }
 
 /**
- * @brief Get Product Firmware Version string.
+ * @brief 获取产品固件版本字符串。
  *
- * @param str Pointer to buffer to store the string (max 60 characters).
- * @return String length (including terminating NULL character) or 0 (no string).
+ * @param str 指向存储字符串的缓冲区指针（最大 60 个字符）。
+ * @return 字符串长度（包括终止 NULL 字符）或 0（无字符串）。
  */
 __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
   (void)str;
@@ -344,55 +326,14 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
 ///@}
 
 
-// Note: DO NOT modify these pins: PIN_SWDIO  PIN_SWDIO_MOSI  PIN_SWCLK
-// Modify the following pins carefully: PIN_TDO
-#ifdef CONFIG_IDF_TARGET_ESP8266
-  #define PIN_SWDIO 12      // SPI MISO
-  #define PIN_SWDIO_MOSI 13 // SPI MOSI
-  #define PIN_SWCLK 14
-  #define PIN_TDO 16        // device TDO -> Host Data Input (use RTC pin 16)
-  #define PIN_TDI 4
-  #define PIN_nTRST 0       // optional
-  #define PIN_nRESET 5
-
-  #define PIN_LED_CONNECTED _ // won't be used
-  #define PIN_LED_RUNNING _ // won't be used
-#elif defined CONFIG_IDF_TARGET_ESP32
-  #define PIN_SWDIO 12      // SPI MISO
-  #define PIN_SWDIO_MOSI 13 // SPI MOSI
-  #define PIN_SWCLK 14
-  #define PIN_TDO 19        // device TDO -> Host Data Input
-  #define PIN_TDI 18
-  #define PIN_nTRST 25       // optional
-  #define PIN_nRESET 26
-
-  #define PIN_LED_CONNECTED _ // won't be used
-  #define PIN_LED_RUNNING _ // won't be used
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-  #define PIN_SWDIO _      // SPI MISO
-  #define PIN_SWDIO_MOSI 7 // SPI MOSI
-  #define PIN_SWCLK 6
-  #define PIN_TDO 8        // device TDO -> Host Data Input
-  #define PIN_TDI 9
-  #define PIN_nTRST 4       // optional
-  #define PIN_nRESET 5
-
-  #define PIN_LED_CONNECTED _ // won't be used
-  #define PIN_LED_RUNNING _ // won't be used
-#elif defined CONFIG_IDF_TARGET_ESP32S3
-  #define PIN_SWDIO _      // SPI MISO
-  #define PIN_SWDIO_MOSI 11 // SPI MOSI
-  #define PIN_SWCLK 12
-  #define PIN_TDO 9        // device TDO -> Host Data Input
-  #define PIN_TDI 10
-  #define PIN_nTRST 14       // optional
-  #define PIN_nRESET 13
-
-  #define PIN_LED_CONNECTED _ // won't be used
-  #define PIN_LED_RUNNING _ // won't be used
-#else
-#error "not a supported target"
-#endif
+// ESP32-S3 引脚定义
+// 注意: 请勿修改这些引脚: PIN_SWDIO_MOSI  PIN_SWCLK
+#define PIN_SWDIO_MOSI 11 // SPI MOSI / SWDIO
+#define PIN_SWCLK 12      // SPI CLK / SWCLK
+#define PIN_TDO 9         // JTAG TDO
+#define PIN_TDI 10        // JTAG TDI
+#define PIN_nTRST 14      // JTAG nTRST (可选)
+#define PIN_nRESET 13     // 目标复位引脚
 
 
 //**************************************************************************************************
@@ -431,152 +372,6 @@ of the same I/O port. The following SWDIO I/O Pin functions are provided:
 */
 
 /**
- * @brief Setup JTAG I/O pins: TCK, TMS, TDI, TDO, nTRST, and nRESET.
- * Configures the DAP Hardware I/O pins for JTAG mode:
- * - TCK, TMS, TDI, nTRST, nRESET to ***output*** mode and set to high level.
- * - TDO to ***input*** mode.
- *
- */
-#ifdef CONFIG_IDF_TARGET_ESP8266
-__STATIC_INLINE void PORT_JTAG_SETUP(void)
-{
-  gpio_pin_reg_t pin_reg;
-
-
-  // set TCK, TMS pin
-  PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14); // GPIO14 is SPI CLK pin (Clock)
-  GPIO.enable_w1ts |= (0x1 << 14); // PP Output
-  // pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(14));
-  // pin_reg.pullup = 1;
-  // WRITE_PERI_REG(GPIO_PIN_REG(14), pin_reg.val);
-
-  PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13); // GPIO13 is SPI MOSI pin (Master Data Out)
-  GPIO.enable_w1ts |= (0x1 << 13);
-  // GPIO.pin[13].driver = 1; // OD output
-  // pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(13));
-  // pin_reg.pullup = 0;
-  // WRITE_PERI_REG(GPIO_PIN_REG(13), pin_reg.val);
-
-
-  // use RTC pin 16
-  // output disable
-  WRITE_PERI_REG(PAD_XPD_DCDC_CONF, ((READ_PERI_REG(PAD_XPD_DCDC_CONF) & (uint32_t)0xffffffbc)) | (uint32_t)0x1); 	// mux configuration for XPD_DCDC and rtc_gpio0 connection
-  CLEAR_PERI_REG_MASK(RTC_GPIO_CONF, 0x1);    // mux configuration for out enable
-  CLEAR_PERI_REG_MASK(RTC_GPIO_ENABLE, 0x1);  // out disable
-  // pulldown disable
-  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_TDO));
-  pin_reg.rtc_pin.pulldown = 0;
-  WRITE_PERI_REG(GPIO_PIN_REG(PIN_TDO), pin_reg.val);
-
-
-
-  // gpio_set_direction(PIN_TDI, GPIO_MODE_OUTPUT);
-  GPIO.enable_w1ts |= (0x1 << PIN_TDI);
-  GPIO.pin[PIN_TDI].driver = 0;
-  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_TDI));
-  pin_reg.pullup = 0;
-  WRITE_PERI_REG(GPIO_PIN_REG(PIN_TDI), pin_reg.val);
-
-  // gpio_set_direction(PIN_nTRST, GPIO_MODE_OUTPUT_OD);
-  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
-  GPIO.enable_w1tc |= (0x1 << PIN_nTRST);
-  GPIO.pin[PIN_nTRST].driver = 1;
-  GPIO.enable_w1tc |= (0x1 << PIN_nRESET);
-  GPIO.pin[PIN_nRESET].driver = 1;
-
-  // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
-  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
-  GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
-  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
-}
-#elif defined CONFIG_IDF_TARGET_ESP32
-__STATIC_INLINE void PORT_JTAG_SETUP(void)
-{
-  // set TCK, TMS pin
-  //// FIXME: esp32
-  //DAP_SPI_Deinit();
-
-
-  // PIN_TDO output disable
-  GPIO.enable_w1tc = (0x1 << PIN_TDO);
-  // PIN_TDO input enable
-  PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_TDO]);
-
-
-
-  // gpio_set_direction(PIN_TDI, GPIO_MODE_OUTPUT);
-  GPIO.enable_w1ts = (0x1 << PIN_TDI);
-  GPIO.pin[PIN_TDI].pad_driver = 0;
-  REG_CLR_BIT(GPIO_PIN_MUX_REG[PIN_TDI], FUN_PD); // disable pull down
-
-  // gpio_set_direction(PIN_nTRST, GPIO_MODE_OUTPUT_OD);
-  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
-  GPIO.enable_w1tc = (0x1 << PIN_nTRST);
-  GPIO.pin[PIN_nTRST].pad_driver = 1;
-  GPIO.enable_w1tc = (0x1 << PIN_nRESET);
-  GPIO.pin[PIN_nRESET].pad_driver = 1;
-
-  // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
-  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
-  GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
-  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
-}
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-__STATIC_INLINE void PORT_JTAG_SETUP(void)
-{
-  // set TCK, TMS pin
-
-
-  // PIN_TDO output disable
-  GPIO.enable_w1tc.enable_w1tc = (0x1 << PIN_TDO);
-  // PIN_TDO input enable
-  PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_TDO]);
-
-
-
-  // gpio_set_direction(PIN_TDI, GPIO_MODE_OUTPUT);
-  GPIO.enable_w1ts.enable_w1ts = (0x1 << PIN_TDI);
-  GPIO.pin[PIN_TDI].pad_driver = 0;
-  REG_CLR_BIT(GPIO_PIN_MUX_REG[PIN_TDI], FUN_PD); // disable pull down
-
-  // gpio_set_direction(PIN_nTRST, GPIO_MODE_OUTPUT_OD);
-  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
-  GPIO.enable_w1tc.enable_w1tc = (0x1 << PIN_nTRST);
-  GPIO.pin[PIN_nTRST].pad_driver = 1;
-  GPIO.enable_w1tc.enable_w1tc = (0x1 << PIN_nRESET);
-  GPIO.pin[PIN_nRESET].pad_driver = 1;
-
-  // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
-  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
-  GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
-  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
-}
-#elif defined CONFIG_IDF_TARGET_ESP32S3
-__STATIC_INLINE void PORT_JTAG_SETUP(void)
-{
-  // set TCK, TMS pin
-
-  // PIN_TDO output disable
-  gpio_ll_output_disable(&GPIO, PIN_TDO);
-  // PIN_TDO input enable
-  gpio_ll_input_enable(&GPIO, PIN_TDO);
-
-  // PIN_TDI output
-  gpio_ll_output_enable(&GPIO, PIN_TDI);
-  gpio_ll_od_disable(&GPIO, PIN_TDI);
-  gpio_ll_pulldown_dis(&GPIO, PIN_TDI);
-
-  gpio_ll_output_enable(&GPIO, PIN_nTRST);
-  gpio_ll_od_enable(&GPIO, PIN_nTRST);
-  gpio_ll_output_enable(&GPIO, PIN_nRESET);
-  gpio_ll_od_enable(&GPIO, PIN_nRESET);
-
-  GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
-  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
-}
-#endif
-
-/**
  * @brief Setup SWD I/O pins: SWCLK, SWDIO, and nRESET.
  * Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
  * - SWCLK, SWDIO, nRESET to output mode and set to default high level.
@@ -600,34 +395,11 @@ __STATIC_INLINE void PORT_SWD_SETUP(void)
  */
 __STATIC_INLINE void PORT_OFF(void)
 {
-  // Will be called when the DAP disconnected
-#if defined CONFIG_IDF_TARGET_ESP8266
-  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
-  GPIO.enable_w1tc |= (0x1 << PIN_nRESET);
-  GPIO.pin[PIN_nRESET].driver = 1;
-
-  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
-  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
-#elif defined CONFIG_IDF_TARGET_ESP32
-  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
-  GPIO.enable_w1tc = (0x1 << PIN_nRESET);
-  GPIO.pin[PIN_nRESET].pad_driver = 1;
-
-  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
-  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
-  GPIO.enable_w1tc.enable_w1tc = (0x1 << PIN_nRESET);
-  GPIO.pin[PIN_nRESET].pad_driver = 1;
-
-  // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
-  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
-#elif defined CONFIG_IDF_TARGET_ESP32S3
+  // DAP 断开连接时调用
   gpio_ll_output_enable(&GPIO, PIN_nRESET);
   gpio_ll_od_enable(&GPIO, PIN_nRESET);
   GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
   gpio_ll_set_level(&GPIO, PIN_nRESET, 1);
-#endif
 }
 
 // SWCLK/TCK I/O pin -------------------------------------
@@ -717,9 +489,9 @@ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 }
 
 /**
- * @brief SWDIO I/O pin: Get Input (used in SWD mode only).
+ * @brief SWDIO I/O 引脚：获取输入（仅用于 SWD 模式）。
  *
- * @return Current status of the SWDIO DAP hardware I/O pin.
+ * @return SWDIO DAP 硬件 I/O 引脚的当前状态。
  */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 {
@@ -727,18 +499,18 @@ __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 }
 
 /**
- * @brief SWDIO I/O pin: Set Output (used in SWD mode only).
+ * @brief SWDIO I/O 引脚：设置输出（仅用于 SWD 模式）。
  *
- * @param bit Output value for the SWDIO DAP hardware I/O pin.
+ * @param bit SWDIO DAP 硬件 I/O 引脚的输出值。
  *
  */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
 {
   /**
-    * Important: Use only one bit (bit0) of param!
-	  * Sometimes the func "SWD_TransferFunction" of SW_DP.c will
-	  * issue "2" as param instead of "0". Zach Lee
-	  */
+    * 重要：仅使用参数的一位（bit0）！
+    * 有时 SW_DP.c 中的 "SWD_TransferFunction" 函数会
+    * 传入 "2" 而不是 "0" 作为参数。Zach Lee
+    */
   if ((bit & 1U) == 1)
   {
     PIN_SWDIO_TMS_SET();
@@ -750,123 +522,35 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
 }
 
 /**
- * @brief SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
- * Configure the SWDIO DAP hardware I/O pin to output mode. This function is
- * called prior \ref PIN_SWDIO_OUT function calls.
+ * @brief SWDIO I/O 引脚：切换到输出模式（仅用于 SWD 模式）。
  */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 {
-  // set \ref gpio_set_direction -> OUTPUT
-#ifdef CONFIG_IDF_TARGET_ESP8266
-  GPIO.enable_w1ts = 0x01 << PIN_SWDIO_MOSI;
-#elif defined CONFIG_IDF_TARGET_ESP32
-  GPIO.enable_w1ts = 0x01 << PIN_SWDIO_MOSI;
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-  SWDIO_OUT_ENABLE();
-#elif defined CONFIG_IDF_TARGET_ESP32S3
-#endif
+  gpio_ll_output_enable(&GPIO, PIN_SWDIO_MOSI);
 }
 
 /**
- * @brief SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
- * Configure the SWDIO DAP hardware I/O pin to input mode. This function is
- * called prior \ref PIN_SWDIO_IN function calls.
+ * @brief SWDIO I/O 引脚：切换到输入模式（仅用于 SWD 模式）。
  */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
 {
-  // set \ref gpio_set_dircetion -> INPUT
-#ifdef CONFIG_IDF_TARGET_ESP8266
-  GPIO.enable_w1tc = 0x01 << PIN_SWDIO_MOSI;
-#elif defined CONFIG_IDF_TARGET_ESP32
-  // Note that the input of esp32 is not always connected.
-  GPIO.enable_w1tc = 0x01 << PIN_SWDIO_MOSI;
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-  SWDIO_OUT_DISABLE();
-#elif defined CONFIG_IDF_TARGET_ESP32S3
-#endif
+  gpio_ll_output_disable(&GPIO, PIN_SWDIO_MOSI);
+  gpio_ll_input_enable(&GPIO, PIN_SWDIO_MOSI);
 }
 
-// TDI Pin I/O ---------------------------------------------
+// JTAG 引脚空实现（CMSIS-DAP 协议需要，即使只用 SWD）
+__STATIC_FORCEINLINE uint32_t PIN_TDI_IN(void) { return 0; }
+__STATIC_FORCEINLINE void PIN_TDI_OUT(uint32_t bit) { (void)bit; }
+__STATIC_FORCEINLINE uint32_t PIN_TDO_IN(void) { return 0; }
+__STATIC_FORCEINLINE uint32_t PIN_nTRST_IN(void) { return 0; }
+__STATIC_FORCEINLINE void PIN_nTRST_OUT(uint32_t bit) { (void)bit; }
+
+// nRESET 引脚 I/O------------------------------------------
 
 /**
- * @brief TDI I/O pin: Get Input.
+ * @brief nRESET I/O 引脚：获取输入。
  *
- * @return Current status of the TDI DAP hardware I/O pin.
- */
-__STATIC_FORCEINLINE uint32_t PIN_TDI_IN(void)
-{
-  return GPIO_GET_LEVEL(PIN_TDI);
-}
-
-/**
- * @brief TDI I/O pin: Set Output.
- *
- * @param bit Output value for the TDI DAP hardware I/O pin.
- *
- */
-__STATIC_FORCEINLINE void PIN_TDI_OUT(uint32_t bit)
-{
-  if ((bit & 1U) == 1)
-  {
-    //set bit
-    GPIO_SET_LEVEL_HIGH(PIN_TDI);
-  }
-  else
-  {
-    //reset bit
-    GPIO_SET_LEVEL_LOW(PIN_TDI);
-  }
-}
-
-// TDO Pin I/O ---------------------------------------------
-
-/**
- * @brief TDO I/O pin: Get Input.
- *
- * @return Current status of the TDO DAP hardware I/O pin.
- */
-__STATIC_FORCEINLINE uint32_t PIN_TDO_IN(void)
-{
-#ifdef CONFIG_IDF_TARGET_ESP8266
-  return READ_PERI_REG(RTC_GPIO_IN_DATA) & 0x1;
-#elif defined CONFIG_IDF_TARGET_ESP32
-  return ((GPIO.in >> PIN_TDO) & 0x1) ? 1 : 0;
-#elif defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
-  return GPIO_GET_LEVEL(PIN_TDO);
-#endif
-}
-
-// nTRST Pin I/O -------------------------------------------
-
-/**
- * @brief nTRST I/O pin: Get Input.
- *
- * @return Current status of the nTRST DAP hardware I/O pin.
- */
-__STATIC_FORCEINLINE uint32_t PIN_nTRST_IN(void)
-{
-  return 0;  // not available
-}
-
-/**
- * @brief nTRST I/O pin: Set Output.
- *
- * @param bit JTAG TRST Test Reset pin status:
- *         - 0: issue a JTAG TRST Test Reset.
-           - 1: release JTAG TRST Test Reset.
- */
-__STATIC_FORCEINLINE void PIN_nTRST_OUT(uint32_t bit)
-{
-  // Vendor reset sequence
-  ; // not available
-}
-
-// nRESET Pin I/O------------------------------------------
-
-/**
- * @brief nRESET I/O pin: Get Input.
- *
- * @return Current status of the nRESET DAP hardware I/O pin.
+ * @return nRESET DAP 硬件 I/O 引脚的当前状态。
  */
 __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 {
@@ -874,38 +558,24 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 }
 
 /**
- * @brief nRESET I/O pin: Set Output.
+ * @brief nRESET I/O 引脚：设置输出。
  *
- * @param bit target device hardware reset pin status:
- *            - 0: issue a device hardware reset.
- *            - 1: release device hardware reset.
+ * @param bit 目标设备硬件复位引脚状态：
+ *            - 0：触发设备硬件复位。
+ *            - 1：释放设备硬件复位。
  */
 __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
 {
-  // Vendor reset sequence
-  //// FIXME: unavailable
   if ((bit & 1U) == 1)
   {
-    //set bit
+    // 释放复位
     GPIO_SET_LEVEL_HIGH(PIN_nRESET);
-#if defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32
-    GPIO.enable_w1tc |= (0x01 << PIN_nRESET);
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-    GPIO.enable_w1tc.enable_w1tc |= (0x01 << PIN_nRESET);
-#elif defined CONFIG_IDF_TARGET_ESP32S3
     gpio_ll_output_disable(&GPIO, PIN_nRESET);
-#endif
   }
   else
   {
-    //reset bit
-#if defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32
-    GPIO.enable_w1ts |= (0x01 << PIN_nRESET);
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-    GPIO.enable_w1ts.enable_w1ts |= (0x01 << PIN_nRESET);
-#elif defined CONFIG_IDF_TARGET_ESP32S3
+    // 触发复位
     gpio_ll_output_enable(&GPIO, PIN_nRESET);
-#endif
     GPIO_SET_LEVEL_LOW(PIN_nRESET);
   }
 }
@@ -914,53 +584,65 @@ __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
 
 //**************************************************************************************************
 /**
-\defgroup DAP_Config_LEDs_gr CMSIS-DAP Hardware Status LEDs
+\defgroup DAP_Config_LEDs_gr CMSIS-DAP 硬件状态 LED
 \ingroup DAP_ConfigIO_gr
 @{
 
-CMSIS-DAP Hardware may provide LEDs that indicate the status of the CMSIS-DAP Debug Unit.
+CMSIS-DAP 硬件可以提供 LED 来指示 CMSIS-DAP 调试单元的状态。
 
-It is recommended to provide the following LEDs for status indication:
- - Connect LED: is active when the DAP hardware is connected to a debugger.
- - Running LED: is active when the debugger has put the target device into running state.
-*/
-
-/** Debug Unit: Set status of Connected LED.
-\param bit status of the Connect LED.
-           - 1: Connect LED ON: debugger is connected to CMSIS-DAP Debug Unit.
-           - 0: Connect LED OFF: debugger is not connected to CMSIS-DAP Debug Unit.
+建议提供以下 LED 用于状态指示：
+ - 连接 LED：当 DAP 硬件连接到调试器时激活。
+ - 运行 LED：当调试器将目标设备置于运行状态时激活。
 */
 
 /**
- * @brief Debug Unit: Set status of Connected LED.
+ * @brief 调试单元：设置连接 LED 的状态。
  *
- * @param bit status of the Connect LED.
- *        - 1: Connect LED ON: debugger is connected to CMSIS-DAP Debug Unit.
- *        - 0: Connect LED OFF: debugger is not connected to CMSIS-DAP Debug Unit.
+ * 此函数用于控制指示调试器连接状态的 LED。
+ * 当调试器（如 IDE）与 CMSIS-DAP 调试单元建立连接时，
+ * 主机会发送 DAP_HostStatus 命令来更新此 LED 状态。
+ *
+ * @param bit 连接 LED 的状态。
+ *        - 1: 连接 LED 点亮：调试器已连接到 CMSIS-DAP 调试单元。
+ *        - 0: 连接 LED 熄灭：调试器未连接到 CMSIS-DAP 调试单元。
+ *
+ * @note 当前实现为空，如需启用 LED 指示功能，请根据硬件配置实现此函数。
+ * @see DAP_HostStatus() 调用此函数来更新连接状态
  */
 __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 {
   (void)(bit);
+  // 示例实现：
+  // if (bit) {
+  //   GPIO_SET_LEVEL_HIGH(PIN_LED_CONNECTED);
+  // } else {
+  //   GPIO_SET_LEVEL_LOW(PIN_LED_CONNECTED);
+  // }
 }
 
 /**
- * @brief Debug Unit: Set status Target Running LED.
+ * @brief 调试单元：设置目标运行 LED 的状态。
  *
- * @param bit status of the Target Running LED.
- *        - 1: Target Running LED ON: program execution in target started.
- *        - 0: Target Running LED OFF: program execution in target stopped.
+ * 此函数用于控制指示目标设备运行状态的 LED。
+ * 当调试器控制目标设备开始或停止程序执行时，
+ * 主机会发送 DAP_HostStatus 命令来更新此 LED 状态。
+ *
+ * @param bit 目标运行 LED 的状态。
+ *        - 1: 目标运行 LED 点亮：目标设备程序执行已开始。
+ *        - 0: 目标运行 LED 熄灭：目标设备程序执行已停止。
+ *
+ * @note 当前实现为空，如需启用 LED 指示功能，请根据硬件配置实现此函数。
+ * @see DAP_HostStatus() 调用此函数来更新运行状态
  */
 __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
 {
   (void)(bit);
-  // if (bit)
-  // {
-  //   //set bit
+  // 示例实现：
+  // if (bit) {
+  //   // 设置引脚为高电平，点亮 LED
   //   GPIO.out_w1ts |= (0x1 << PIN_LED_RUNNING);
-  // }
-  // else
-  // {
-  //   //reset bit
+  // } else {
+  //   // 设置引脚为低电平，熄灭 LED
   //   GPIO.out_w1tc |= (0x1 << PIN_LED_RUNNING);
   // }
 }
@@ -969,20 +651,20 @@ __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
 
 //**************************************************************************************************
 /**
-\defgroup DAP_Config_Timestamp_gr CMSIS-DAP Timestamp
+\defgroup DAP_Config_Timestamp_gr CMSIS-DAP 时间戳
 \ingroup DAP_ConfigIO_gr
 @{
-Access function for Test Domain Timer.
+测试域定时器访问函数。
 
-The value of the Test Domain Timer in the Debug Unit is returned by the function \ref TIMESTAMP_GET. By
-default, the DWT timer is used.  The frequency of this timer is configured with \ref TIMESTAMP_CLOCK.
+调试单元中测试域定时器的值由函数 \ref TIMESTAMP_GET 返回。
+默认使用 DWT 定时器。此定时器的频率由 \ref TIMESTAMP_CLOCK 配置。
 
 */
 
 /**
- * @brief Get timestamp of Test Domain Timer.
+ * @brief 获取测试域定时器的时间戳。
  *
- * @return Current timestamp value.
+ * @return 当前时间戳值。
  */
 __STATIC_INLINE uint32_t TIMESTAMP_GET(void)
 {
@@ -993,50 +675,42 @@ __STATIC_INLINE uint32_t TIMESTAMP_GET(void)
 
 //**************************************************************************************************
 /**
-\defgroup DAP_Config_Initialization_gr CMSIS-DAP Initialization
+\defgroup DAP_Config_Initialization_gr CMSIS-DAP 初始化
 \ingroup DAP_ConfigIO_gr
 @{
 
-CMSIS-DAP Hardware I/O and LED Pins are initialized with the function \ref DAP_SETUP.
+CMSIS-DAP 硬件 I/O 和 LED 引脚通过函数 \ref DAP_SETUP 进行初始化。
 */
 
-/** Setup of the Debug Unit I/O pins and LEDs (called when Debug Unit is initialized).
-This function performs the initialization of the CMSIS-DAP Hardware I/O Pins and the
-Status LEDs. In detail the operation of Hardware I/O and LED pins are enabled and set:
- - I/O clock system enabled.
- - all I/O pins: input buffer enabled, output pins are set to HighZ mode.
- - for nTRST, nRESET a weak pull-up (if available) is enabled.
- - LED output pins are enabled and LEDs are turned off.
+/** 调试单元 I/O 引脚和 LED 的设置（在调试单元初始化时调用）。
+此函数执行 CMSIS-DAP 硬件 I/O 引脚和状态 LED 的初始化。
+详细操作包括启用并设置硬件 I/O 和 LED 引脚：
+ - 启用 I/O 时钟系统。
+ - 所有 I/O 引脚：启用输入缓冲区，输出引脚设置为高阻态模式。
+ - 对于 nTRST、nRESET，启用弱上拉（如果可用）。
+ - 启用 LED 输出引脚并关闭 LED。
 */
 __STATIC_INLINE void DAP_SETUP(void)
 {
-  // Connecting non-SWD pins to GPIO
-  GPIO_FUNCTION_SET(PIN_TDO);
-  GPIO_FUNCTION_SET(PIN_TDI);
-  GPIO_FUNCTION_SET(PIN_nTRST);
+  // 初始化 SWD 引脚
+  GPIO_FUNCTION_SET(PIN_SWCLK);
+  GPIO_FUNCTION_SET(PIN_SWDIO_MOSI);
   GPIO_FUNCTION_SET(PIN_nRESET);
 
-  /**
-   * The drive strength has a significant impact on signal integrity.
-   * In actual use, it is necessary to perform signal measurements
-   * on the board and select the appropriate drive strength.
-   */
-#if defined (CONFIG_IDF_TARGET_ESP32S3) || defined (CONFIG_IDF_TARGET_ESP32C3)
-  // 5mA for esp32c3/esp32s3
+  // 设置驱动能力 (5mA)
   gpio_ll_set_drive_capability(&GPIO, PIN_SWCLK, GPIO_DRIVE_CAP_0);
   gpio_ll_set_drive_capability(&GPIO, PIN_SWDIO_MOSI, GPIO_DRIVE_CAP_0);
-#endif
 
   PORT_OFF();
 }
 
 extern void dap_os_delay(int ms);
-/** Reset Target Device with custom specific I/O pin or command sequence.
-This function allows the optional implementation of a device specific reset sequence.
-It is called when the command \ref DAP_ResetTarget and is for example required
-when a device needs a time-critical unlock sequence that enables the debug port.
-\return 0 = no device specific reset sequence is implemented.\n
-        1 = a device specific reset sequence is implemented.
+/** 使用自定义特定 I/O 引脚或命令序列复位目标设备。
+此函数允许可选地实现设备特定的复位序列。
+当执行 \ref DAP_ResetTarget 命令时调用此函数，
+例如当设备需要时间关键的解锁序列来启用调试端口时需要此函数。
+\return 0 = 未实现设备特定的复位序列。\n
+        1 = 已实现设备特定的复位序列。
 */
 __STATIC_INLINE uint8_t RESET_TARGET(void)
 {
@@ -1045,7 +719,7 @@ __STATIC_INLINE uint8_t RESET_TARGET(void)
   dap_os_delay(2);
   PIN_nRESET_OUT(1);
   dap_os_delay(2);
-  return (1U); // OK
+  return (1U); // 成功
 }
 
 ///@}
