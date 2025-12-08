@@ -1,0 +1,2 @@
+# Enable TinyUSB Vendor class
+CONFIG_TINYUSB_VENDOR_COUNT=1
