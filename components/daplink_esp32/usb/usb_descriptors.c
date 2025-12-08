@@ -17,6 +17,10 @@
 #include <stdint.h>
 #include <string.h>
 #include "tusb.h"
+#include "esp_log.h"
+
+static const char *TAG = "USB_DESC";
+static bool s_ms_os_20_dumped = false;
 
 /* ==================== USB 设备描述符 ==================== */
 /**
@@ -31,13 +35,13 @@
 const tusb_desc_device_t desc_device __attribute__((used)) = {
     .bLength            = sizeof(tusb_desc_device_t),  // 描述符长度（18字节）
     .bDescriptorType    = TUSB_DESC_DEVICE,            // 描述符类型：设备描述符（0x01）
-    .bcdUSB             = 0x0200,                      // USB 规范版本：2.0（支持全速12Mbps）
+    .bcdUSB             = 0x0201,                      // USB 规范版本：2.01（启用 BOS，用于 MS OS 2.0）
     .bDeviceClass       = 0x00,                        // 设备类：0x00 表示在接口描述符中定义
     .bDeviceSubClass    = 0x00,                        // 设备子类：无
     .bDeviceProtocol    = 0x00,                        // 设备协议：无
     .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,      // 端点0最大包大小（通常64字节）
-    .idVendor           = 0x0D28,                      // 厂商ID：ARM Ltd（CMSIS-DAP标准VID）
-    .idProduct          = 0x0204,                      // 产品ID：DAPLink CMSIS-DAP
+    .idVendor           = 0xCAFE,                      // 临时测试厂商ID（避免与 ARM 官方 VID 冲突）
+    .idProduct          = 0x4001,                      // 临时测试产品ID
     .bcdDevice          = 0x0200,                      // 设备版本：v2.0
     .iManufacturer      = 0x01,                        // 厂商字符串索引（由回调函数提供）
     .iProduct           = 0x02,                        // 产品字符串索引（由回调函数提供）
@@ -156,18 +160,15 @@ const uint8_t desc_fs_configuration[] __attribute__((used)) = {
 
 /* ==================== BOS 描述符（Binary Object Store）==================== */
 /**
- * Microsoft OS 2.0 描述符集的长度
- * 
- * 这个值必须与后面 desc_ms_os_20 数组的实际长度匹配。
- * 计算方式：
+ * Microsoft OS 2.0 描述符集的长度（simple device 布局）
+ *
+ * 采用 TinyUSB 讨论 #823（HiFiPhile）给出的 simple device 示例：
  * - Set Header：10 字节
- * - Configuration Subset Header：8 字节
- * - Function Subset Header：8 字节
  * - Compatible ID：20 字节
  * - Registry Property：132 字节
- * 总计：178 字节（0xB2）
+ * 总计：162 字节（0xA2）
  */
-#define MS_OS_20_DESC_LEN  0xB2
+#define MS_OS_20_DESC_LEN  0xA2
 
 /**
  * BOS 描述符总长度
@@ -215,44 +216,53 @@ const uint8_t desc_bos[] __attribute__((used)) = {
     TUD_BOS_MS_OS_20_DESCRIPTOR(MS_OS_20_DESC_LEN, 1)
 };
 
-// Microsoft OS 2.0 描述符集
-
+// Microsoft OS 2.0 描述符集（simple device）
+// 完全按照 TinyUSB 讨论 #823 HiFiPhile 示例实现
 const uint8_t desc_ms_os_20[] __attribute__((used)) = {
     // Set header: length, type, windows version, total length
-    U16_TO_U8S_LE(0x000A), U16_TO_U8S_LE(MS_OS_20_SET_HEADER_DESCRIPTOR), U32_TO_U8S_LE(0x06030000), U16_TO_U8S_LE(MS_OS_20_DESC_LEN),
-    
-    // Configuration subset header: length, type, configuration index, reserved, configuration total length
-    U16_TO_U8S_LE(0x0008), U16_TO_U8S_LE(MS_OS_20_SUBSET_HEADER_CONFIGURATION), 0, 0, U16_TO_U8S_LE(MS_OS_20_DESC_LEN - 0x0A),
-    
-    // Function subset header: length, type, first interface, reserved, subset length
-    U16_TO_U8S_LE(0x0008), U16_TO_U8S_LE(MS_OS_20_SUBSET_HEADER_FUNCTION), ITF_NUM_VENDOR, 0, U16_TO_U8S_LE(MS_OS_20_DESC_LEN - 0x0A - 0x08),
-    
-    // Compatible ID descriptor: length, type, compatible ID, sub compatible ID
-    U16_TO_U8S_LE(0x0014), U16_TO_U8S_LE(MS_OS_20_FEATURE_COMPATBLE_ID), 'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    
-    // Registry property descriptor: length, type
-    U16_TO_U8S_LE(0x0084), U16_TO_U8S_LE(MS_OS_20_FEATURE_REG_PROPERTY),
-    U16_TO_U8S_LE(0x0007), U16_TO_U8S_LE(0x002A), // wPropertyDataType, wPropertyNameLength
-    // Property name: DeviceInterfaceGUIDs
-    'D', 0, 'e', 0, 'v', 0, 'i', 0, 'c', 0, 'e', 0, 'I', 0, 'n', 0, 't', 0, 'e', 0, 'r', 0, 'f', 0, 'a', 0, 'c', 0, 'e', 0, 'G', 0, 'U', 0, 'I', 0, 'D', 0, 's', 0, 0, 0,
-    U16_TO_U8S_LE(0x0050), // wPropertyDataLength
-    // Property data: {CDB3B5AD-293B-4663-AA36-1AAE46463776}
-    '{', 0, 'C', 0, 'D', 0, 'B', 0, '3', 0, 'B', 0, '5', 0, 'A', 0, 'D', 0, '-', 0, '2', 0, '9', 0, '3', 0, 'B', 0, '-', 0, '4', 0, '6', 0, '6', 0, '3', 0, '-', 0, 'A', 0, 'A', 0, '3', 0, '6', 0, '-', 0, '1', 0, 'A', 0, 'A', 0, 'E', 0, '4', 0, '6', 0, '4', 0, '6', 0, '3', 0, '7', 0, '7', 0, '6', 0, '}', 0, 0, 0, 0, 0
-};
+    U16_TO_U8S_LE(0x000A),
+    U16_TO_U8S_LE(MS_OS_20_SET_HEADER_DESCRIPTOR),
+    U32_TO_U8S_LE(0x06030000),
+    U16_TO_U8S_LE(MS_OS_20_DESC_LEN),
 
-/* ==================== TinyUSB 回调函数（补充 esp_tinyusb 未提供的部分）==================== */
+    // MS OS 2.0 Compatible ID descriptor: length, type, compatible ID, sub compatible ID
+    U16_TO_U8S_LE(0x0014),
+    U16_TO_U8S_LE(MS_OS_20_FEATURE_COMPATBLE_ID),
+    'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // sub-compatible
+
+    // MS OS 2.0 Registry property descriptor: length, type
+    U16_TO_U8S_LE(MS_OS_20_DESC_LEN-0x0A-0x14),
+    U16_TO_U8S_LE(MS_OS_20_FEATURE_REG_PROPERTY),
+    U16_TO_U8S_LE(0x0007),
+    U16_TO_U8S_LE(0x002A), // wPropertyDataType, wPropertyNameLength and PropertyName "DeviceInterfaceGUIDs\0" in UTF-16
+    'D', 0x00, 'e', 0x00, 'v', 0x00, 'i', 0x00, 'c', 0x00, 'e', 0x00,
+    'I', 0x00, 'n', 0x00, 't', 0x00, 'e', 0x00, 'r', 0x00, 'f', 0x00,
+    'a', 0x00, 'c', 0x00, 'e', 0x00, 'G', 0x00, 'U', 0x00, 'I', 0x00,
+    'D', 0x00, 's', 0x00, 0x00, 0x00,
+    U16_TO_U8S_LE(0x0050), // wPropertyDataLength
+    // bPropertyData: {70394F16-EDAF-47D5-92C8-7CB51107A235}
+    '{', 0x00, '7', 0x00, '0', 0x00, '3', 0x00, '9', 0x00, '4', 0x00,
+    'F', 0x00, '1', 0x00, '6', 0x00, '-', 0x00,
+    'E', 0x00, 'D', 0x00, 'A', 0x00, 'F', 0x00, '-', 0x00,
+    '4', 0x00, '7', 0x00, 'D', 0x00, '5', 0x00, '-', 0x00,
+    '9', 0x00, '2', 0x00, 'C', 0x00, '8', 0x00, '-', 0x00,
+    '7', 0x00, 'C', 0x00, 'B', 0x00, '5', 0x00, '1', 0x00, '1', 0x00,
+    '0', 0x00, '7', 0x00, 'A', 0x00, '2', 0x00, '3', 0x00, '5', 0x00,
+    '}', 0x00, 0x00, 0x00, 0x00, 0x00
+};
 
 /**
  * @brief BOS 描述符回调函数
- * 
+ *
  * esp_tinyusb 组件没有提供此回调，需要我们自己实现。
  * 当主机请求 BOS 描述符时，TinyUSB 会调用此函数。
- * 
+ *
  * @return 指向 BOS 描述符的指针
  */
 uint8_t const* tud_descriptor_bos_cb(void)
 {
+    ESP_LOGI(TAG, "tud_descriptor_bos_cb called");
     return desc_bos;
 }
 
@@ -274,10 +284,24 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         return true;
     }
 
+    ESP_LOGI(TAG,
+             "vendor ctrl: bmReq=0x%02X bReq=%u wIndex=%u wLength=%u",
+             request->bmRequestType,
+             request->bRequest,
+             request->wIndex,
+             request->wLength);
+
     // 检查是否是 MS OS 2.0 描述符请求
     // bRequest = 1 (BOS 描述符中定义的 Vendor Code)
     // wIndex = 7 (MS OS 2.0 描述符集请求)
     if (request->bRequest == 1 && request->wIndex == 7) {
+        if (!s_ms_os_20_dumped) {
+            s_ms_os_20_dumped = true;
+            ESP_LOGI(TAG, "MS OS 2.0: sizeof=%u, MS_OS_20_DESC_LEN=%u",
+                     (unsigned)sizeof(desc_ms_os_20), (unsigned)MS_OS_20_DESC_LEN);
+            ESP_LOG_BUFFER_HEX_LEVEL(TAG, desc_ms_os_20, MS_OS_20_DESC_LEN, ESP_LOG_INFO);
+        }
+        ESP_LOGI(TAG, "sending MS OS 2.0 descriptor, len=%u", (unsigned)MS_OS_20_DESC_LEN);
         // 返回 MS OS 2.0 描述符
         return tud_control_xfer(rhport, request, (void*)(uintptr_t)desc_ms_os_20, MS_OS_20_DESC_LEN);
     }
