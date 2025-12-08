@@ -128,6 +128,6 @@ void dap_handler_init(void)
         NULL,
         5,
         NULL,
-        0  // Run on core 0
+        1  // Run on core 0
     );
 }
