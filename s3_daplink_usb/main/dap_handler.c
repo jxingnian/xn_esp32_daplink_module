@@ -2,7 +2,7 @@
  * @Author: 星年 && jixingnian@gmail.com
  * @Date: 2025-12-08 21:23:12
  * @LastEditors: xingnian jixingnian@gmail.com
- * @LastEditTime: 2025-12-09 14:37:18
+ * @LastEditTime: 2025-12-09 14:45:46
  * @FilePath: \todo-xn_esp32_daplink_module\s3_daplink_usb\main\dap_handler.c
  * @Description: DAP 命令处理模块 - 负责处理来自 USB 主机的 CMSIS-DAP 命令
  * 
@@ -74,8 +74,8 @@ static void dap_handler_task(void *pvParameters)
             uint32_t count = tud_vendor_read(dap_request, sizeof(dap_request));
             
             if (count > 0) {
-                /* 调试日志：显示接收到的字节数和命令 ID */
-                ESP_LOGI(TAG, "DAP CMD: 0x%02X, len=%lu", dap_request[0], count);
+                /* 调试日志：正式使用时注释掉以提高性能 */
+                // ESP_LOGI(TAG, "DAP CMD: 0x%02X, len=%lu", dap_request[0], count);
 
                 /* 
                  * 调用 CMSIS-DAP 协议栈处理命令
@@ -92,12 +92,12 @@ static void dap_handler_task(void *pvParameters)
                     /* 刷新缓冲区，确保数据立即发送 */
                     tud_vendor_flush();
                     
-                    /* 检查响应状态 (仅对 Transfer 命令) */
-                    if (dap_request[0] == 0x05 || dap_request[0] == 0x06) {
-                        if (dap_response[1] != 0x01) {  // ACK != OK
-                            ESP_LOGW(TAG, "Transfer ACK=0x%02X", dap_response[1]);
-                        }
-                    }
+                    /* 检查响应状态 (仅对 Transfer 命令) - 调试时取消注释 */
+                    // if (dap_request[0] == 0x05 || dap_request[0] == 0x06) {
+                    //     if (dap_response[1] != 0x01) {  // ACK != OK
+                    //         ESP_LOGW(TAG, "Transfer ACK=0x%02X", dap_response[1]);
+                    //     }
+                    // }
                 } else {
                     ESP_LOGE(TAG, "No response for CMD 0x%02X", dap_request[0]);
                 }
@@ -105,10 +105,12 @@ static void dap_handler_task(void *pvParameters)
         }
 
         /* 
-         * 短暂延时以防止 CPU 空转
-         * 1ms 的延时在调试性能和 CPU 占用之间取得平衡
+         * 仅在没有数据时短暂让出 CPU
+         * 有数据时不延时，保证最大吞吐量
          */
-        vTaskDelay(pdMS_TO_TICKS(1));
+        if (!tud_vendor_available()) {
+            taskYIELD();  // 让出 CPU 但不阻塞
+        }
     }
 }
 
