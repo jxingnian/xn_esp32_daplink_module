@@ -1,3 +1,4 @@
+if(0)
 idf_component_register(
     SRCS
         "source/DAP.c"
@@ -13,3 +14,4 @@ idf_component_register(
         driver
         esp_timer
 )
+endif()
