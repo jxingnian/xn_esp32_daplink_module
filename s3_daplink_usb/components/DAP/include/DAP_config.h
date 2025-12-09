@@ -39,6 +39,8 @@
 
 #include "esp32s3/rom/gpio.h"
 #include "driver/gpio.h"
+#include "hal/gpio_ll.h"
+#include "soc/gpio_struct.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -313,7 +315,8 @@ __STATIC_FORCEINLINE void     PIN_SWDIO_OUT(uint32_t bit)
 */
 __STATIC_FORCEINLINE void     PIN_SWDIO_OUT_ENABLE(void)
 {
-    gpio_set_direction(PIN_SWDIO, GPIO_MODE_OUTPUT);
+    // 使用寄存器直接操作，比 gpio_set_direction() 快得多
+    GPIO.enable_w1ts = (1U << PIN_SWDIO);
 }
 
 /** SWDIO I/O 引脚: 切换到输入模式(仅在 SWD 模式下使用)。
@@ -321,7 +324,8 @@ __STATIC_FORCEINLINE void     PIN_SWDIO_OUT_ENABLE(void)
 */
 __STATIC_FORCEINLINE void     PIN_SWDIO_OUT_DISABLE(void)
 {
-	gpio_set_direction(PIN_SWDIO, GPIO_MODE_INPUT);
+    // 使用寄存器直接操作，比 gpio_set_direction() 快得多
+    GPIO.enable_w1tc = (1U << PIN_SWDIO);
 }
 
 

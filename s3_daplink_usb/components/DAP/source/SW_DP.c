@@ -277,26 +277,24 @@ static uint8_t SWD_Transfer##speed (uint32_t request, uint32_t *data) {         
 #define PIN_DELAY() PIN_DELAY_FAST()
 SWD_TransferFunction(Fast)
 
-// #undef  PIN_DELAY
-// #define PIN_DELAY() PIN_DELAY_SLOW(DAP_Data.clock_delay)
-// SWD_TransferFunction(Slow)
+#undef  PIN_DELAY
+#define PIN_DELAY() PIN_DELAY_SLOW(DAP_Data.clock_delay)
+SWD_TransferFunction(Slow)
 
 // SWD Transfer I/O
 //   request: A[3:2] RnW APnDP
 //   data:    DATA[31:0]
 //   return:  ACK[2:0]
 __WEAK uint8_t  SWD_Transfer(uint32_t request, uint32_t *data) {
-  // if (DAP_Data.fast_clock) {
-  //   return SWD_TransferFast(request, data);
-  // } else {
-  //   return SWD_TransferSlow(request, data);
-  // }
-
   uint8_t ret = 0;
   portMUX_TYPE lock = portMUX_INITIALIZER_UNLOCKED;
 
   portENTER_CRITICAL(&lock);
-  ret = SWD_TransferFast(request, data);
+  if (DAP_Data.fast_clock) {
+    ret = SWD_TransferFast(request, data);
+  } else {
+    ret = SWD_TransferSlow(request, data);
+  }
   portEXIT_CRITICAL(&lock);
 
   return ret;

@@ -2,7 +2,7 @@
  * @Author: 星年 && jixingnian@gmail.com
  * @Date: 2025-12-08 21:23:12
  * @LastEditors: xingnian jixingnian@gmail.com
- * @LastEditTime: 2025-12-09 14:45:46
+ * @LastEditTime: 2025-12-09 14:49:47
  * @FilePath: \todo-xn_esp32_daplink_module\s3_daplink_usb\main\dap_handler.c
  * @Description: DAP 命令处理模块 - 负责处理来自 USB 主机的 CMSIS-DAP 命令
  * 
@@ -87,7 +87,7 @@ static void dap_handler_task(void *pvParameters)
                 /* 如果有响应数据，发送回 USB 主机 */
                 if (response_len > 0) {
                     /* 写入响应数据到 USB 发送缓冲区 */
-                    uint32_t written = tud_vendor_write(dap_response, response_len);
+                    tud_vendor_write(dap_response, response_len);
                     
                     /* 刷新缓冲区，确保数据立即发送 */
                     tud_vendor_flush();
