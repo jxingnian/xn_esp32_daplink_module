@@ -157,14 +157,14 @@ __STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
 
 #if defined CONFIG_IDF_TARGET_ESP32S3
 // Use standard GPIO for ESP32-S3 (simpler, slightly slower than dedicated GPIO)
-// PIN_SWCLK = GPIO12, PIN_SWDIO_MOSI = GPIO11
-#define SWCLK_SET() do { gpio_ll_set_level(&GPIO, 12, 1); } while (0)
-#define SWCLK_CLR() do { gpio_ll_set_level(&GPIO, 12, 0); } while (0)
-#define SWDIO_SET() do { gpio_ll_set_level(&GPIO, 11, 1); } while (0)
-#define SWDIO_CLR() do { gpio_ll_set_level(&GPIO, 11, 0); } while (0)
+// PIN_SWCLK = GPIO9, PIN_SWDIO_MOSI = GPIO8
+#define SWCLK_SET() do { gpio_ll_set_level(&GPIO, 9, 1); } while (0)
+#define SWCLK_CLR() do { gpio_ll_set_level(&GPIO, 9, 0); } while (0)
+#define SWDIO_SET() do { gpio_ll_set_level(&GPIO, 8, 1); } while (0)
+#define SWDIO_CLR() do { gpio_ll_set_level(&GPIO, 8, 0); } while (0)
 #define SWDIO_GET_IN() \
   ({ \
-    gpio_ll_get_level(&GPIO, 11); \
+    gpio_ll_get_level(&GPIO, 8); \
   })
 #elif defined CONFIG_IDF_TARGET_ESP32C3
 #define SWCLK_SET() do { RV_SET_CSR(CSR_GPIO_OUT_USER, 2); } while(0)

@@ -24,15 +24,15 @@ void DAP_SPI_Init(void)
     periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
 
     // 停止 GPIO 驱动，避免 SPI 时序问题
-    gpio_ll_set_level(&GPIO, GPIO_NUM_12, 0);
-    gpio_ll_set_level(&GPIO, GPIO_NUM_11, 0);
+    gpio_ll_set_level(&GPIO, GPIO_NUM_9, 0);
+    gpio_ll_set_level(&GPIO, GPIO_NUM_8, 0);
 
     // 设置为 GPIO 功能
-    gpio_ll_func_sel(&GPIO, GPIO_NUM_12, PIN_FUNC_GPIO);
-    gpio_ll_func_sel(&GPIO, GPIO_NUM_11, PIN_FUNC_GPIO);
+    gpio_ll_func_sel(&GPIO, GPIO_NUM_9, PIN_FUNC_GPIO);
+    gpio_ll_func_sel(&GPIO, GPIO_NUM_8, PIN_FUNC_GPIO);
 
-    GPIO.func_out_sel_cfg[GPIO_NUM_11].oen_sel = 0;
-    GPIO.func_out_sel_cfg[GPIO_NUM_12].oen_sel = 0;
+    GPIO.func_out_sel_cfg[GPIO_NUM_8].oen_sel = 0;
+    GPIO.func_out_sel_cfg[GPIO_NUM_9].oen_sel = 0;
 
     // 不使用 DMA
     DAP_SPI.user.usr_conf_nxt = 0;
@@ -106,15 +106,15 @@ void DAP_SPI_Init(void)
  */
 __FORCEINLINE void DAP_SPI_Deinit(void)
 {
-    gpio_ll_func_sel(&GPIO, GPIO_NUM_12, PIN_FUNC_GPIO);
-    gpio_ll_func_sel(&GPIO, GPIO_NUM_11, PIN_FUNC_GPIO);
+    gpio_ll_func_sel(&GPIO, GPIO_NUM_9, PIN_FUNC_GPIO);
+    gpio_ll_func_sel(&GPIO, GPIO_NUM_8, PIN_FUNC_GPIO);
 
     // SWCLK 输出
-    gpio_ll_output_enable(&GPIO, GPIO_NUM_12);
+    gpio_ll_output_enable(&GPIO, GPIO_NUM_9);
 
     // SWDIO 输出和输入
-    gpio_ll_output_enable(&GPIO, GPIO_NUM_11);
-    gpio_ll_input_enable(&GPIO, GPIO_NUM_11);
+    gpio_ll_output_enable(&GPIO, GPIO_NUM_8);
+    gpio_ll_input_enable(&GPIO, GPIO_NUM_8);
 }
 
 /**
@@ -122,7 +122,7 @@ __FORCEINLINE void DAP_SPI_Deinit(void)
  */
 __FORCEINLINE void DAP_SPI_Acquire(void)
 {
-    gpio_ll_func_sel(&GPIO, GPIO_NUM_12, PIN_FUNC_GPIO);
+    gpio_ll_func_sel(&GPIO, GPIO_NUM_9, PIN_FUNC_GPIO);
 }
 
 /**
@@ -130,5 +130,5 @@ __FORCEINLINE void DAP_SPI_Acquire(void)
  */
 __FORCEINLINE void DAP_SPI_Release(void)
 {
-    gpio_ll_func_sel(&GPIO, GPIO_NUM_12, PIN_FUNC_GPIO);
+    gpio_ll_func_sel(&GPIO, GPIO_NUM_9, PIN_FUNC_GPIO);
 }

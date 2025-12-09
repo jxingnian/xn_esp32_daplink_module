@@ -327,11 +327,11 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
 
 
 // ESP32-S3 引脚定义
-// 注意: 请勿修改这些引脚: PIN_SWDIO_MOSI  PIN_SWCLK
-#define PIN_SWDIO_MOSI 11 // SPI MOSI / SWDIO
-#define PIN_SWCLK 12      // SPI CLK / SWCLK
-#define PIN_TDO 9         // JTAG TDO
-#define PIN_TDI 10        // JTAG TDI
+// 使用 GPIO8 作为 SWDIO，GPIO9 作为 SWCLK（均串 150Ω 电阻）
+#define PIN_SWDIO_MOSI 8   // SWDIO
+#define PIN_SWCLK 9        // SWCLK
+#define PIN_TDO 10         // JTAG TDO
+#define PIN_TDI 11         // JTAG TDI
 #define PIN_nTRST 14      // JTAG nTRST (可选)
 #define PIN_nRESET 13     // 目标复位引脚
 

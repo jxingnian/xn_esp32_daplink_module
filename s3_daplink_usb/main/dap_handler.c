@@ -2,7 +2,7 @@
  * @Author: 星年 && jixingnian@gmail.com
  * @Date: 2025-12-08 21:23:12
  * @LastEditors: xingnian jixingnian@gmail.com
- * @LastEditTime: 2025-12-08 22:42:29
+ * @LastEditTime: 2025-12-09 11:02:00
  * @FilePath: \todo-xn_esp32_daplink_module\s3_daplink_usb\main\dap_handler.c
  * @Description: DAP 命令处理模块 - 负责处理来自 USB 主机的 CMSIS-DAP 命令
  * 
@@ -75,7 +75,7 @@ static void dap_handler_task(void *pvParameters)
             
             if (count > 0) {
                 /* 调试日志：显示接收到的字节数和命令 ID */
-                ESP_LOGD(TAG, "接收到 %lu 字节, 命令=0x%02X", count, dap_request[0]);
+                ESP_LOGI(TAG, "DAP CMD: 0x%02X, len=%lu", dap_request[0], count);
 
                 /* 
                  * 调用 CMSIS-DAP 协议栈处理命令
@@ -87,10 +87,19 @@ static void dap_handler_task(void *pvParameters)
                 /* 如果有响应数据，发送回 USB 主机 */
                 if (response_len > 0) {
                     /* 写入响应数据到 USB 发送缓冲区 */
-                    tud_vendor_write(dap_response, response_len);
+                    uint32_t written = tud_vendor_write(dap_response, response_len);
                     
                     /* 刷新缓冲区，确保数据立即发送 */
                     tud_vendor_flush();
+                    
+                    /* 检查响应状态 (仅对 Transfer 命令) */
+                    if (dap_request[0] == 0x05 || dap_request[0] == 0x06) {
+                        if (dap_response[1] != 0x01) {  // ACK != OK
+                            ESP_LOGW(TAG, "Transfer ACK=0x%02X", dap_response[1]);
+                        }
+                    }
+                } else {
+                    ESP_LOGE(TAG, "No response for CMD 0x%02X", dap_request[0]);
                 }
             }
         }
