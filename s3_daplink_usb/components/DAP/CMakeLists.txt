@@ -1,17 +1,14 @@
-if(0)
 idf_component_register(
-    SRCS
-        "source/DAP.c"
-        "source/DAP_vendor.c"
-        "source/SW_DP.c"
-        "source/spi_switch.c"
-        "source/spi_op.c"
-        "source/dap_utility.c"
-    INCLUDE_DIRS
-        "include"
-        "config"
-    REQUIRES
-        driver
-        esp_timer
+	SRCS
+		"Source/DAP.c"
+		"Source/DAP_vendor.c"
+		"Source/JTAG_DP.c"
+		"Source/SW_DP.c"
+		"Source/swd_host.c"
+		"Source/error.c"
+	INCLUDE_DIRS
+		"Include"
+		"cmsis-core"
+	REQUIRES
+		driver
 )
-endif()
