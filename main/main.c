@@ -23,6 +23,7 @@
 #include "nvs_flash.h"
 #include "usb_init.h"
 #include "dap_handler.h"
+#include "dap_tcp_server.h"
 #include "xn_wifi_manage.h"
 #include "xn_esp_frpc.h"
 
@@ -31,6 +32,7 @@ static const char *TAG = "S3_DAPLINK_USB";
 
 /* FRP客户端运行状态 */
 static bool frpc_running = false;
+static bool dap_tcp_running = false;
 
 /**
  * @brief WiFi状态回调 - 根据WiFi状态自动启动/停止FRP客户端
@@ -41,8 +43,20 @@ static void wifi_state_callback(wifi_manage_state_t state)
         case WIFI_MANAGE_STATE_CONNECTED:
             ESP_LOGI(TAG, "✅ WiFi已连接");
             
-            // WiFi连接成功，启动FRP客户端
-            if (!frpc_running) {
+            // 步骤1: 启动DAP TCP服务器
+            if (!dap_tcp_running) {
+                ESP_LOGI(TAG, "🚀 启动DAP TCP服务器...");
+                esp_err_t ret = dap_tcp_server_start(5555);
+                if (ret == ESP_OK) {
+                    dap_tcp_running = true;
+                    ESP_LOGI(TAG, "✅ DAP TCP服务器已启动（端口5555）");
+                } else {
+                    ESP_LOGE(TAG, "❌ DAP TCP服务器启动失败");
+                }
+            }
+            
+            // 步骤2: 启动FRP客户端
+            if (!frpc_running && dap_tcp_running) {
                 ESP_LOGI(TAG, "🚀 启动FRP客户端...");
                 
                 xn_frpc_config_t frpc_config = {
@@ -74,12 +88,19 @@ static void wifi_state_callback(wifi_manage_state_t state)
         case WIFI_MANAGE_STATE_DISCONNECTED:
             ESP_LOGW(TAG, "❌ WiFi已断开");
             
-            // WiFi断开，停止FRP客户端
+            // WiFi断开，停止FRP客户端和DAP TCP服务器
             if (frpc_running) {
                 ESP_LOGI(TAG, "🛑 停止FRP客户端...");
                 xn_frpc_stop();
                 frpc_running = false;
                 ESP_LOGI(TAG, "✅ FRP客户端已停止");
+            }
+            
+            if (dap_tcp_running) {
+                ESP_LOGI(TAG, "🛑 停止DAP TCP服务器...");
+                dap_tcp_server_stop();
+                dap_tcp_running = false;
+                ESP_LOGI(TAG, "✅ DAP TCP服务器已停止");
             }
             break;
             
