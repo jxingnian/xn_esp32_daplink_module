@@ -1,3 +1,13 @@
+<!--
+ * @Author: 星年 && jixingnian@gmail.com
+ * @Date: 2025-12-10 09:54:21
+ * @LastEditors: xingnian jixingnian@gmail.com
+ * @LastEditTime: 2025-12-10 10:28:02
+ * @FilePath: \todo-xn_esp32_daplink_module\components\xn_esp_frpc\README.md
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+-->
 # xn_esp_frpc - ESP32 FRP客户端组件
 
 简化版FRP客户端，专用于ESP32-S3的DAP端口映射。

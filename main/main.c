@@ -16,6 +16,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
@@ -23,24 +24,73 @@
 #include "usb_init.h"
 #include "dap_handler.h"
 #include "xn_wifi_manage.h"
+#include "xn_esp_frpc.h"
 
 /* 日志标签 - 用于标识本模块的日志输出 */
 static const char *TAG = "S3_DAPLINK_USB";
 
+/* FRP客户端运行状态 */
+static bool frpc_running = false;
+
 /**
- * @brief WiFi状态回调
+ * @brief WiFi状态回调 - 根据WiFi状态自动启动/停止FRP客户端
  */
 static void wifi_state_callback(wifi_manage_state_t state)
 {
     switch (state) {
         case WIFI_MANAGE_STATE_CONNECTED:
             ESP_LOGI(TAG, "✅ WiFi已连接");
+            
+            // WiFi连接成功，启动FRP客户端
+            if (!frpc_running) {
+                ESP_LOGI(TAG, "🚀 启动FRP客户端...");
+                
+                xn_frpc_config_t frpc_config = {
+                    .server_addr = "frp.xingnian.vip",  // TODO: 从NVS读取配置
+                    .server_port = 7000,
+                    .auth_token = "Z9tFfrWKsrn9ijaQkDtp",
+                    .proxy_name = "esp32_dap",
+                    .local_port = 5555,
+                    .remote_port = 50005,
+                    .heartbeat_interval = 30,
+                };
+                
+                esp_err_t ret = xn_frpc_init(&frpc_config);
+                if (ret == ESP_OK) {
+                    ret = xn_frpc_start();
+                    if (ret == ESP_OK) {
+                        frpc_running = true;
+                        ESP_LOGI(TAG, "✅ FRP客户端已启动");
+                        ESP_LOGI(TAG, "   远程访问: %s:%d", frpc_config.server_addr, frpc_config.remote_port);
+                    } else {
+                        ESP_LOGE(TAG, "❌ FRP客户端启动失败");
+                    }
+                } else {
+                    ESP_LOGE(TAG, "❌ FRP客户端初始化失败");
+                }
+            }
             break;
+            
         case WIFI_MANAGE_STATE_DISCONNECTED:
             ESP_LOGW(TAG, "❌ WiFi已断开");
+            
+            // WiFi断开，停止FRP客户端
+            if (frpc_running) {
+                ESP_LOGI(TAG, "🛑 停止FRP客户端...");
+                xn_frpc_stop();
+                frpc_running = false;
+                ESP_LOGI(TAG, "✅ FRP客户端已停止");
+            }
             break;
+            
         case WIFI_MANAGE_STATE_CONNECT_FAILED:
             ESP_LOGE(TAG, "❌ WiFi连接失败");
+            
+            // 连接失败，确保FRP客户端已停止
+            if (frpc_running) {
+                xn_frpc_stop();
+                frpc_running = false;
+            }
             break;
     }
 }
