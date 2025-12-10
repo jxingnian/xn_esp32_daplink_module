@@ -1,0 +1,184 @@
+<!--
+ * @Author: 星年 && jixingnian@gmail.com
+ * @Date: 2025-11-22 21:25:04
+ * @LastEditors: xingnian jixingnian@gmail.com
+ * @LastEditTime: 2025-11-23 16:29:29
+ * @FilePath: \xn_web_wifi_config\components\xn_web_wifi_manger\wifi_spiffs\index.html
+ * @Description: Web 配网页面（仅基础框架：WiFi 状态 / 已保存 / 扫描 / 连接）
+ *
+ * 页面职责：
+ * 1. 提供一个简洁的配网入口页面
+ * 2. 按顺序展示四个基础模块的占位结构
+ * 3. 所有交互逻辑在 app.js 中按需逐步补充
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
+-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>WiFi 管理</title>
+
+  <!-- 页面样式：仅负责基础布局与配色，交互逻辑在 app.js 中实现 -->
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <!-- 根容器：限制页面宽度并居中显示所有模块 -->
+  <div class="page">
+    <div class="page-inner">
+
+      <!-- 顶部标题区域：展示页面说明与整体状态摘要 -->
+      <header class="page-header">
+        <div>
+          <div class="page-title">WiFi 管理 By.星年</div>
+        </div>
+      </header>
+
+      <!-- 主体区域：按顺序排列四个独立模块 -->
+      <main class="page-main">
+
+        <!-- 模块一：当前 WiFi 状态（展示占位信息，不做复杂逻辑） -->
+        <section class="card" id="section-status">
+          <div class="card-header">
+            <div class="card-title">当前 WiFi 状态</div>
+            <!-- 运行模式：显示当前 WiFi 模式（AP / STA / AP+STA），未获取时默认为 AP+STA -->
+            <div class="card-extra" id="wifi-status-mode">AP+STA</div>
+          </div>
+          <div class="card-body">
+            <div class="status-grid">
+              <!-- 左侧为文字信息区域 -->
+              <div>
+                <div class="status-line">
+                  <div class="status-label">连接状态</div>
+                  <div class="status-value" id="wifi-status-text">未连接</div>
+                </div>
+                <div class="status-line">
+                  <div class="status-label">SSID</div>
+                  <div class="status-value" id="wifi-status-ssid">-</div>
+                </div>
+                <div class="status-line">
+                  <div class="status-label">IP 地址</div>
+                  <div class="status-value" id="wifi-status-ip">-</div>
+                </div>
+              </div>
+
+              <!-- 右侧为信号强度可视化（已根据 RSSI 映射当前连接信号等级） -->
+              <div class="status-visual">
+                <div class="signal-bar" data-level="0" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 模块二：已保存的 WiFi（仅表格结构，后续由接口填充） -->
+        <section class="card" id="section-saved">
+          <div class="card-header">
+            <div class="card-title">已保存的 WiFi</div>
+          </div>
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table class="simple-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40px">#</th>
+                    <th>SSID</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <!--
+                  行数据由 app.js 根据设备返回结果渲染，
+                  这里仅保留一个干净的占位容器。
+                -->
+                <tbody id="saved-list"></tbody>
+              </table>
+              <p class="empty-hint" id="saved-empty">暂无已保存的 WiFi</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 模块三：扫描附近 WiFi（按钮 + 结果表格骨架） -->
+        <section class="card" id="section-scan">
+          <div class="card-header">
+            <div class="card-title">扫描附近 WiFi</div>
+          </div>
+          <div class="card-body">
+            <!-- 操作区：目前只有一个“开始扫描”按钮 -->
+            <div class="toolbar-row">
+              <button class="btn btn-primary" id="btn-scan" type="button">
+                开始扫描
+              </button>
+            </div>
+
+            <div class="table-wrapper">
+              <table class="simple-table">
+                <thead>
+                  <tr>
+                    <th>SSID</th>
+                    <th style="width: 90px">信号</th>
+                    <th style="width: 90px">安全</th>
+                  </tr>
+                </thead>
+                <!-- 扫描结果占位容器，后续由 JS 动态填充 -->
+                <tbody id="scan-list"></tbody>
+              </table>
+              <p class="empty-hint" id="scan-empty">尚未扫描</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 模块四：连接 WiFi（最小表单，仅包含 SSID 与密码） -->
+        <section class="card" id="section-connect">
+          <div class="card-header">
+            <div class="card-title">连接 WiFi</div>
+          </div>
+          <div class="card-body">
+            <form id="connect-form" autocomplete="off">
+              <div class="form-grid">
+                <div class="form-row">
+                  <label class="form-label" for="connect-ssid">SSID</label>
+                  <input
+                    class="form-input"
+                    id="connect-ssid"
+                    name="ssid"
+                    required
+                  />
+                </div>
+                <div class="form-row">
+                  <label class="form-label" for="connect-password">密码</label>
+                  <input
+                    class="form-input"
+                    id="connect-password"
+                    name="password"
+                    type="password"
+                  />
+                </div>
+              </div>
+
+              <!-- 按钮与提示区域 -->
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">
+                  连接
+                </button>
+                <div class="form-message" id="connect-message">
+                  <!-- 提示文字由 app.js 设置 -->
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- 页面脚本：只做最小初始化，具体行为由后续需求驱动 -->
+  <script src="app.js"></script>
+</body>
+</html>
